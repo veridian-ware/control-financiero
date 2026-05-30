@@ -20,7 +20,7 @@ class TransactionRepository {
         categoryId = this[Transactions.categoryId],
         categoryName = this.getOrNull(Categories.name),
         date = this[Transactions.date].format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
-        source = this[Transactions.source],
+        source = this[Transactions.sourceCol],
         externalId = this[Transactions.externalId]
     )
 
@@ -62,7 +62,7 @@ class TransactionRepository {
             it[type] = request.type
             it[categoryId] = request.categoryId
             it[date] = txDate
-            it[source] = "manual"
+            it[sourceCol] = "manual"
             it[createdAt] = now
         } get Transactions.id
 
@@ -97,7 +97,7 @@ class TransactionRepository {
             it[type] = mpType
             it[categoryId] = mpCategoryId
             it[date] = mpDate
-            it[source] = "mercadopago"
+            it[sourceCol] = "mercadopago"
             it[externalId] = mpExternalId
             it[createdAt] = LocalDateTime.now()
         } get Transactions.id

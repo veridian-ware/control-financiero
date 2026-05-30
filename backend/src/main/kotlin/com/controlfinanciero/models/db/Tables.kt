@@ -21,7 +21,7 @@ object Transactions : Table("transactions") {
     val type = varchar("type", 10) // "ingreso" o "egreso"
     val categoryId = integer("category_id").references(Categories.id)
     val date = datetime("date")
-    val source = varchar("source", 50).default("manual") // "manual", "mercadopago"
+    val sourceCol = varchar("source", 50).default("manual") // propiedad renombrada: "source" choca con ColumnSet.source
     val externalId = varchar("external_id", 100).nullable() // ID de Mercado Pago
     val createdAt = datetime("created_at")
 
