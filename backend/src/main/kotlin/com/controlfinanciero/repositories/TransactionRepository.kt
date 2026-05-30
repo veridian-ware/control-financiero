@@ -119,6 +119,7 @@ class TransactionRepository {
             .join(Categories, JoinType.LEFT, Transactions.categoryId, Categories.id)
             .selectAll()
             .where { (Transactions.date greaterEq from) and (Transactions.date lessEq to) }
+            .orderBy(Transactions.date, SortOrder.DESC)
             .map { it.toTransactionDTO() }
 
         val totalIngresos = transactions.filter { it.type == "ingreso" }.sumOf { it.amount }

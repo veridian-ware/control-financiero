@@ -10,8 +10,7 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import java.time.OffsetDateTime
 
 @Serializable
 data class MercadoPagoPayment(
@@ -88,10 +87,10 @@ class MercadoPagoService(
                 try {
                     val isIngreso = payment.operationType == "regular_payment"
                     val type = if (isIngreso) "ingreso" else "egreso"
-                    val date = LocalDateTime.parse(
-                        payment.dateCreated.substringBefore("+"),
-                        DateTimeFormatter.ISO_LOCAL_DATE_TIME
-                    )
+                    // date_created viene en ISO 8601 con offset (ej: "...T10:15:30.000-03:00").
+                    // OffsetDateTime soporta cualquier offset (+/-); el LocalDateTime.parse anterior
+                    // fallaba con offsets negativos (Argentina = -03:00).
+                    val date = OffsetDateTime.parse(payment.dateCreated).toLocalDateTime()
 
                     transactionRepository.createFromMercadoPago(
                         mpAmount = payment.transactionAmount,

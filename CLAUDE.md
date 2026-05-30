@@ -120,6 +120,11 @@ Nunca commitear tokens reales. `.env` y `local.properties` están en `.gitignore
 
 - ✅ Resuelto (2026-05-30): agregado el Gradle wrapper 8.11.1 a ambos módulos.
 - ✅ Resuelto (2026-05-30): `android/settings.gradle.kts` corregido a `dependencyResolutionManagement`.
+- ✅ Resuelto (2026-05-30): agregado `android/app/proguard-rules.pro` (faltaba; rompía el build de release).
+- ✅ Resuelto (2026-05-30): `MercadoPagoService` parseaba mal fechas con offset negativo (AR `-03:00`); ahora usa `OffsetDateTime`.
+- ✅ Resuelto (2026-05-30): `getDashboard` ahora ordena por fecha DESC antes de `take(10)` (transacciones recientes).
+- ⚠️ **A verificar (lógica de negocio):** en `MercadoPagoService.syncPayments`, `operationType == "regular_payment"` se clasifica como **ingreso**. Según el rol de la cuenta MP esto puede estar invertido — validar con datos reales antes de confiar en el dashboard.
+- ⚠️ **Sin verificar por build:** ningún cambio se compiló (este entorno no tiene JDK/Gradle/SDK). Verificar en el IDE.
 - Roadmap (del README): auth JWT, gráficos Vico en la app, historial con filtros,
   notificaciones de gastos altos, export Excel/PDF, presupuestos por categoría,
   integración Brubank.
