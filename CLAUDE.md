@@ -32,12 +32,11 @@ separados: se abren/compilan por separado.
 
 ## Build & Run
 
-> ⚠️ **No hay Gradle wrapper** (`gradlew` / `gradle/wrapper/`) en ninguno de los dos
-> módulos, aunque el README dice `./gradlew run`. Para compilar por CLI hace falta:
-> 1. Generar el wrapper: `gradle wrapper` (con un Gradle del sistema instalado), o
-> 2. Abrir cada módulo en su IDE (Android Studio para `android/`, IntelliJ para `backend/`),
->    que descarga Gradle automáticamente.
-> Actualmente el entorno **no** tiene `gradle`, `java` ni Android SDK en el PATH.
+> Cada módulo tiene su **Gradle wrapper** (`gradlew` / `gradlew.bat` / `gradle/wrapper/`)
+> fijado a **Gradle 8.11.1** (compatible con AGP 8.7.3 y Kotlin 2.0.21). El wrapper
+> descarga Gradle solo en la primera corrida.
+> Nota: este entorno de desarrollo **no** tiene `gradle`, `java` ni Android SDK en el PATH,
+> así que la compilación se hace desde el IDE o una máquina con JDK 17 instalado.
 
 ### Backend
 ```bash
@@ -119,10 +118,8 @@ Nunca commitear tokens reales. `.env` y `local.properties` están en `.gitignore
 
 ## Problemas conocidos / pendientes
 
-- ❗ **Falta el Gradle wrapper** en ambos módulos (ver sección Build & Run).
-- ❗ `android/settings.gradle.kts` usa el bloque `dependencyResolution { ... }`, que **no
-  es DSL válido de Gradle** — debería ser `dependencyResolutionManagement { ... }`.
-  Probablemente rompa la sincronización del proyecto Android hasta corregirlo.
+- ✅ Resuelto (2026-05-30): agregado el Gradle wrapper 8.11.1 a ambos módulos.
+- ✅ Resuelto (2026-05-30): `android/settings.gradle.kts` corregido a `dependencyResolutionManagement`.
 - Roadmap (del README): auth JWT, gráficos Vico en la app, historial con filtros,
   notificaciones de gastos altos, export Excel/PDF, presupuestos por categoría,
   integración Brubank.

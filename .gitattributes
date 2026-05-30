@@ -1,0 +1,6 @@
+# Keep the Gradle wrapper Unix script as LF so it runs on Linux/macOS/CI
+gradlew text eol=lf
+gradlew.bat text eol=crlf
+
+# Treat the wrapper jar (and any jar) as binary — no EOL conversion
+*.jar binary
