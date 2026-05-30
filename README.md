@@ -1,5 +1,7 @@
 # Control Financiero
 
+[![CI](https://github.com/veridian-ware/control-financiero/actions/workflows/ci.yml/badge.svg)](https://github.com/veridian-ware/control-financiero/actions/workflows/ci.yml)
+
 Aplicación de registro financiero personal con integración a Mercado Pago.
 
 ## Arquitectura

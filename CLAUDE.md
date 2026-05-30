@@ -124,7 +124,9 @@ Nunca commitear tokens reales. `.env` y `local.properties` están en `.gitignore
 - ✅ Resuelto (2026-05-30): `MercadoPagoService` parseaba mal fechas con offset negativo (AR `-03:00`); ahora usa `OffsetDateTime`.
 - ✅ Resuelto (2026-05-30): `getDashboard` ahora ordena por fecha DESC antes de `take(10)` (transacciones recientes).
 - ⚠️ **A verificar (lógica de negocio):** en `MercadoPagoService.syncPayments`, `operationType == "regular_payment"` se clasifica como **ingreso**. Según el rol de la cuenta MP esto puede estar invertido — validar con datos reales antes de confiar en el dashboard.
-- ⚠️ **Sin verificar por build:** ningún cambio se compiló (este entorno no tiene JDK/Gradle/SDK). Verificar en el IDE.
+- ✅ Verificado por CI (2026-05-30): backend y Android compilan en limpio en GitHub Actions (`.github/workflows/ci.yml`).
+- ✅ Resuelto (2026-05-30): bug **preexistente** en `Tables.kt` — la columna se llamaba `source`, que choca con `ColumnSet.source` de Exposed 0.57 y hacía que el backend **no compilara**. Propiedad renombrada a `sourceCol` (la columna en la DB sigue siendo `"source"`). ⚠️ Gotcha al agregar columnas Exposed: evitar nombres que existan en `ColumnSet`/`Table`.
+- ✅ Resuelto (2026-05-30): OOM de R8/D8 en CI → `org.gradle.jvmargs=-Xmx4g` en `android/gradle.properties`.
 - Roadmap (del README): auth JWT, gráficos Vico en la app, historial con filtros,
   notificaciones de gastos altos, export Excel/PDF, presupuestos por categoría,
   integración Brubank.
