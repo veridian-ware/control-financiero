@@ -25,6 +25,7 @@ class TransactionRepository {
     )
 
     suspend fun getAll(
+        userId: Int,
         type: String? = null,
         categoryId: Int? = null,
         from: LocalDateTime? = null,
@@ -34,6 +35,7 @@ class TransactionRepository {
     ): List<TransactionDTO> = dbQuery {
         val query = Transactions.join(Categories, JoinType.LEFT, Transactions.categoryId, Categories.id)
             .selectAll()
+            .where { Transactions.userId eq userId }
 
         type?.let { query.andWhere { Transactions.type eq it } }
         categoryId?.let { query.andWhere { Transactions.categoryId eq it } }
@@ -46,17 +48,18 @@ class TransactionRepository {
             .map { it.toTransactionDTO() }
     }
 
-    suspend fun getById(id: Long): TransactionDTO? = dbQuery {
+    suspend fun getById(userId: Int, id: Long): TransactionDTO? = dbQuery {
         Transactions.join(Categories, JoinType.LEFT, Transactions.categoryId, Categories.id)
-            .selectAll().where { Transactions.id eq id }
+            .selectAll().where { (Transactions.id eq id) and (Transactions.userId eq userId) }
             .singleOrNull()?.toTransactionDTO()
     }
 
-    suspend fun create(request: CreateTransactionRequest): TransactionDTO = dbQuery {
+    suspend fun create(userId: Int, request: CreateTransactionRequest): TransactionDTO = dbQuery {
         val now = LocalDateTime.now()
         val txDate = request.date?.let { LocalDateTime.parse(it) } ?: now
 
         val id = Transactions.insert {
+            it[Transactions.userId] = userId
             it[amount] = BigDecimal.valueOf(request.amount)
             it[description] = request.description
             it[type] = request.type
@@ -78,6 +81,7 @@ class TransactionRepository {
     }
 
     suspend fun createFromMercadoPago(
+        userId: Int,
         mpAmount: Double,
         mpDescription: String,
         mpType: String,
@@ -86,12 +90,13 @@ class TransactionRepository {
         mpExternalId: String
     ): TransactionDTO = dbQuery {
         val existing = Transactions.selectAll()
-            .where { Transactions.externalId eq mpExternalId }
+            .where { (Transactions.externalId eq mpExternalId) and (Transactions.userId eq userId) }
             .singleOrNull()
 
         if (existing != null) return@dbQuery existing.toTransactionDTO()
 
         val id = Transactions.insert {
+            it[Transactions.userId] = userId
             it[amount] = BigDecimal.valueOf(mpAmount)
             it[description] = mpDescription
             it[type] = mpType
@@ -110,15 +115,18 @@ class TransactionRepository {
         )
     }
 
-    suspend fun delete(id: Long): Boolean = dbQuery {
-        Transactions.deleteWhere { Transactions.id eq id } > 0
+    suspend fun delete(userId: Int, id: Long): Boolean = dbQuery {
+        Transactions.deleteWhere { (Transactions.id eq id) and (Transactions.userId eq userId) } > 0
     }
 
-    suspend fun getDashboard(from: LocalDateTime, to: LocalDateTime): DashboardDTO = dbQuery {
+    suspend fun getDashboard(userId: Int, from: LocalDateTime, to: LocalDateTime): DashboardDTO = dbQuery {
         val transactions = Transactions
             .join(Categories, JoinType.LEFT, Transactions.categoryId, Categories.id)
             .selectAll()
-            .where { (Transactions.date greaterEq from) and (Transactions.date lessEq to) }
+            .where {
+                (Transactions.userId eq userId) and
+                    (Transactions.date greaterEq from) and (Transactions.date lessEq to)
+            }
             .orderBy(Transactions.date, SortOrder.DESC)
             .map { it.toTransactionDTO() }
 
@@ -144,12 +152,15 @@ class TransactionRepository {
         )
     }
 
-    suspend fun getMonthlyReport(year: Int): List<MonthlyReport> = dbQuery {
+    suspend fun getMonthlyReport(userId: Int, year: Int): List<MonthlyReport> = dbQuery {
         val from = LocalDateTime.of(year, 1, 1, 0, 0)
         val to = LocalDateTime.of(year, 12, 31, 23, 59, 59)
 
         val transactions = Transactions.selectAll()
-            .where { (Transactions.date greaterEq from) and (Transactions.date lessEq to) }
+            .where {
+                (Transactions.userId eq userId) and
+                    (Transactions.date greaterEq from) and (Transactions.date lessEq to)
+            }
             .map {
                 Triple(
                     it[Transactions.date].monthValue,

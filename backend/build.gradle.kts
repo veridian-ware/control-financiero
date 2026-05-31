@@ -47,6 +47,9 @@ dependencies {
     // HikariCP Connection Pool
     implementation("com.zaxxer:HikariCP:6.2.1")
 
+    // Password hashing (BCrypt)
+    implementation("org.mindrot:jbcrypt:0.4")
+
     // Logging
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
 

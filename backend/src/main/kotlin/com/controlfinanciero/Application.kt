@@ -13,6 +13,7 @@ fun Application.module() {
     DatabaseFactory.init(environment.config)
     configureSerialization()
     configureCORS()
+    configureSecurity()
     configureStatusPages()
     configureRouting()
 }

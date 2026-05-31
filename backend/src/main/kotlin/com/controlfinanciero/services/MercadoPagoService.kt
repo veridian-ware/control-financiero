@@ -57,6 +57,7 @@ class MercadoPagoService(
      * @param defaultCategoryId categoría por defecto para asignar
      */
     suspend fun syncPayments(
+        userId: Int,
         from: String? = null,
         to: String? = null,
         defaultCategoryId: Int = 1
@@ -93,6 +94,7 @@ class MercadoPagoService(
                     val date = OffsetDateTime.parse(payment.dateCreated).toLocalDateTime()
 
                     transactionRepository.createFromMercadoPago(
+                        userId = userId,
                         mpAmount = payment.transactionAmount,
                         mpDescription = payment.description ?: "Pago Mercado Pago #${payment.id}",
                         mpType = type,
