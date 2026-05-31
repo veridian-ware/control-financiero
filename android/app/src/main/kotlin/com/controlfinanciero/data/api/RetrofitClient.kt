@@ -1,8 +1,10 @@
 package com.controlfinanciero.data.api
 
 import com.controlfinanciero.BuildConfig
+import com.controlfinanciero.data.auth.AuthTokenProvider
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
+import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -16,9 +18,27 @@ object RetrofitClient {
         isLenient = true
     }
 
+    // Inyecta el header Authorization si hay token y detecta 401 para forzar logout.
+    private val authInterceptor = Interceptor { chain ->
+        val token = AuthTokenProvider.token
+        val request = if (token != null) {
+            chain.request().newBuilder()
+                .header("Authorization", "Bearer $token")
+                .build()
+        } else {
+            chain.request()
+        }
+        val response = chain.proceed(request)
+        if (response.code == 401 && token != null) {
+            AuthTokenProvider.notifyUnauthorized()
+        }
+        response
+    }
+
     private val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
+        .addInterceptor(authInterceptor)
         .addInterceptor(HttpLoggingInterceptor().apply {
             level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY
                     else HttpLoggingInterceptor.Level.NONE

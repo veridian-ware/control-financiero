@@ -5,6 +5,19 @@ import retrofit2.http.*
 
 interface ApiService {
 
+    // Autenticación
+    @POST("api/auth/register")
+    suspend fun register(@Body request: RegisterRequest): ApiResponse<AuthResponse>
+
+    @POST("api/auth/login")
+    suspend fun login(@Body request: LoginRequest): ApiResponse<AuthResponse>
+
+    @GET("api/auth/me")
+    suspend fun me(): ApiResponse<User>
+
+    @POST("api/mercadopago/token")
+    suspend fun setMercadoPagoToken(@Body request: SetMpTokenRequest): ApiResponse<String>
+
     // Categorías
     @GET("api/categories")
     suspend fun getCategories(@Query("type") type: String? = null): ApiResponse<List<Category>>

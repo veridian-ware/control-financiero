@@ -59,31 +59,38 @@ curl -X POST http://localhost:8080/api/categories/seed
 ### Backend (`backend/src/main/kotlin/com/controlfinanciero/`)
 - `Application.kt` — entry point. `main()` usa `EngineMain` (config en `application.conf`).
   `Application.module()` inicializa DB y plugins en orden:
-  `DatabaseFactory.init` → Serialization → CORS → StatusPages → Routing.
+  `DatabaseFactory.init` → Serialization → CORS → **Security (JWT)** → StatusPages → Routing.
 - `database/DatabaseFactory.kt` — HikariCP + Exposed, lee config de `application.conf`.
-- `models/db/Tables.kt` — tablas Exposed (Categories, Transactions).
-- `models/dto/DTOs.kt` — DTOs serializables de la API.
-- `repositories/` — acceso a datos (`CategoryRepository`, `TransactionRepository`).
-- `routes/` — endpoints REST. Se registran en `plugins/Routing.kt`.
+- `models/db/Tables.kt` — tablas Exposed (`Users`, `Categories`, `Transactions`; las dos últimas con `user_id`).
+- `models/dto/DTOs.kt` + `AuthDTOs.kt` — DTOs serializables de la API.
+- `repositories/` — `UserRepository`, `CategoryRepository`, `TransactionRepository`; **todos filtran por `userId`**.
+- `routes/` — endpoints REST. Se registran en `plugins/Routing.kt`: `authRoutes` es público, el resto va bajo `authenticate(JWT_AUTH)`.
 - `services/MercadoPagoService.kt` — cliente Ktor hacia la API de Mercado Pago.
-- `plugins/` — config de Ktor (CORS, Serialization, StatusPages, Routing).
-- Config runtime: `src/main/resources/application.conf` (puerto, DB, Mercado Pago).
+- `plugins/Security.kt` — JWT HMAC256: `configureSecurity()`, `generateJwtToken()`, `ApplicationCall.userId()` (extrae el userId del token).
+- `plugins/` — config de Ktor (CORS, Serialization, Security, StatusPages, Routing).
+- Config runtime: `src/main/resources/application.conf` (puerto, DB, Mercado Pago, JWT).
 
 ### Android (`android/app/src/main/kotlin/com/controlfinanciero/`)
-- `MainActivity.kt` — host Compose.
+- `MainActivity.kt` — host Compose + gating de auth (spinner / `AuthScreen` / app).
 - `data/api/ApiService.kt` — interfaz Retrofit (espejo de los endpoints del backend).
-- `data/api/RetrofitClient.kt` — singleton Retrofit (OkHttp, timeouts 30s, JSON lenient).
+- `data/api/RetrofitClient.kt` — singleton Retrofit; interceptor agrega `Bearer` y, ante 401, fuerza logout.
+- `data/auth/` — `SessionManager` (DataStore) + `AuthTokenProvider` (token en memoria que lee el interceptor).
 - `data/models/Models.kt` — modelos compartidos + `ApiResponse<T>` wrapper.
-- `ui/screens/` — `DashboardScreen`, `AddTransactionScreen`.
-- `ui/viewmodels/DashboardViewModel.kt` — estado del dashboard.
+- `ui/screens/` — `DashboardScreen`, `AddTransactionScreen`, `AuthScreen`.
+- `ui/viewmodels/` — `DashboardViewModel`, `AuthViewModel` (login/registro/logout).
 - `ui/theme/Theme.kt` — Material3.
 
 ## API REST
 
 Base: `http://localhost:8080`. Todas las respuestas envueltas en `ApiResponse<T>`.
+Todas las rutas excepto `register`/`login` requieren `Authorization: Bearer <token>` y filtran por usuario.
 
 | Método | Ruta                              | Descripción                                   |
 |--------|-----------------------------------|-----------------------------------------------|
+| POST   | `/api/auth/register`              | Crear cuenta → `{ token, user }` (siembra categorías) |
+| POST   | `/api/auth/login`                 | Login → `{ token, user }`                     |
+| GET    | `/api/auth/me`                    | Usuario autenticado                           |
+| POST   | `/api/mercadopago/token`          | Guardar token MP del usuario                  |
 | GET    | `/api/categories`                 | Listar categorías (filtro `type`)             |
 | POST   | `/api/categories`                 | Crear categoría                               |
 | POST   | `/api/categories/seed`            | Crear categorías por defecto                  |
@@ -104,7 +111,10 @@ El backend lee de `application.conf` con override por env var:
 | `DATABASE_URL`              | `jdbc:postgresql://localhost:5432/control_financiero` |
 | `DATABASE_USER`             | `postgres`                                             |
 | `DATABASE_PASSWORD`         | `postgres`                                             |
-| `MERCADOPAGO_ACCESS_TOKEN`  | (sin default — requerido para sync)                   |
+| `MERCADOPAGO_ACCESS_TOKEN`  | (fallback global; cada usuario puede setear el suyo)  |
+| `JWT_SECRET`                | `dev-secret-cambiar-en-produccion` (⚠️ cambiar en prod) |
+| `JWT_ISSUER` / `JWT_AUDIENCE` | `control-financiero` / `control-financiero-app`     |
+| `JWT_VALIDITY_MS`           | `604800000` (7 días)                                  |
 
 Nunca commitear tokens reales. `.env` y `local.properties` están en `.gitignore`.
 

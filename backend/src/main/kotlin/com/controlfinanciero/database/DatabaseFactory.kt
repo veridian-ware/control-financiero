@@ -2,6 +2,7 @@ package com.controlfinanciero.database
 
 import com.controlfinanciero.models.db.Categories
 import com.controlfinanciero.models.db.Transactions
+import com.controlfinanciero.models.db.Users
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.server.config.*
@@ -34,7 +35,8 @@ object DatabaseFactory {
         Database.connect(dataSource)
 
         transaction {
-            SchemaUtils.create(Categories, Transactions)
+            // Orden importa por las foreign keys: Users <- Categories <- Transactions
+            SchemaUtils.create(Users, Categories, Transactions)
         }
     }
 

@@ -17,22 +17,34 @@ class CategoryRepository {
         color = this[Categories.color]
     )
 
-    suspend fun getAll(): List<CategoryDTO> = dbQuery {
-        Categories.selectAll().map { it.toCategoryDTO() }
-    }
-
-    suspend fun getByType(type: String): List<CategoryDTO> = dbQuery {
-        Categories.selectAll().where { Categories.type eq type }
+    suspend fun getAll(userId: Int): List<CategoryDTO> = dbQuery {
+        Categories.selectAll().where { Categories.userId eq userId }
             .map { it.toCategoryDTO() }
     }
 
-    suspend fun getById(id: Int): CategoryDTO? = dbQuery {
-        Categories.selectAll().where { Categories.id eq id }
+    suspend fun getByType(userId: Int, type: String): List<CategoryDTO> = dbQuery {
+        Categories.selectAll()
+            .where { (Categories.userId eq userId) and (Categories.type eq type) }
+            .map { it.toCategoryDTO() }
+    }
+
+    suspend fun getById(userId: Int, id: Int): CategoryDTO? = dbQuery {
+        Categories.selectAll()
+            .where { (Categories.id eq id) and (Categories.userId eq userId) }
             .singleOrNull()?.toCategoryDTO()
     }
 
-    suspend fun create(category: CategoryDTO): CategoryDTO = dbQuery {
+    /** Primera categoría del usuario (preferentemente de egreso). Útil como default para Mercado Pago. */
+    suspend fun firstCategoryId(userId: Int): Int? = dbQuery {
+        Categories.selectAll().where { Categories.userId eq userId }
+            .orderBy(Categories.type to SortOrder.DESC, Categories.id to SortOrder.ASC) // "egreso" antes que "ingreso"
+            .limit(1)
+            .singleOrNull()?.get(Categories.id)
+    }
+
+    suspend fun create(userId: Int, category: CategoryDTO): CategoryDTO = dbQuery {
         val id = Categories.insert {
+            it[Categories.userId] = userId
             it[name] = category.name
             it[type] = category.type
             it[icon] = category.icon
@@ -43,8 +55,8 @@ class CategoryRepository {
         category.copy(id = id)
     }
 
-    suspend fun update(id: Int, category: CategoryDTO): Boolean = dbQuery {
-        Categories.update({ Categories.id eq id }) {
+    suspend fun update(userId: Int, id: Int, category: CategoryDTO): Boolean = dbQuery {
+        Categories.update({ (Categories.id eq id) and (Categories.userId eq userId) }) {
             it[name] = category.name
             it[type] = category.type
             it[icon] = category.icon
@@ -52,12 +64,13 @@ class CategoryRepository {
         } > 0
     }
 
-    suspend fun delete(id: Int): Boolean = dbQuery {
-        Categories.deleteWhere { Categories.id eq id } > 0
+    suspend fun delete(userId: Int, id: Int): Boolean = dbQuery {
+        Categories.deleteWhere { (Categories.id eq id) and (Categories.userId eq userId) } > 0
     }
 
-    suspend fun seedDefaults() = dbQuery {
-        if (Categories.selectAll().count() == 0L) {
+    suspend fun seedDefaults(userId: Int) = dbQuery {
+        val alreadyHas = Categories.selectAll().where { Categories.userId eq userId }.count() > 0L
+        if (!alreadyHas) {
             val defaults = listOf(
                 CategoryDTO(name = "Salario", type = "ingreso", icon = "work", color = "#4CAF50"),
                 CategoryDTO(name = "Freelance", type = "ingreso", icon = "laptop", color = "#8BC34A"),
@@ -74,6 +87,7 @@ class CategoryRepository {
             )
             defaults.forEach { cat ->
                 Categories.insert {
+                    it[Categories.userId] = userId
                     it[name] = cat.name
                     it[type] = cat.type
                     it[icon] = cat.icon
