@@ -112,11 +112,13 @@ El backend lee de `application.conf` con override por env var:
 | `DATABASE_USER`             | `postgres`                                             |
 | `DATABASE_PASSWORD`         | `postgres`                                             |
 | `MERCADOPAGO_ACCESS_TOKEN`  | (fallback global; cada usuario puede setear el suyo)  |
-| `JWT_SECRET`                | `dev-secret-cambiar-en-produccion` (⚠️ cambiar en prod) |
+| `APP_ENV`                   | `development` (cualquier otro valor = "prod": activa el fail-fast del JWT) |
+| `JWT_SECRET`                | `dev-secret-cambiar-en-produccion` (⚠️ con `APP_ENV≠development` el server **no arranca** si sigue el default) |
 | `JWT_ISSUER` / `JWT_AUDIENCE` | `control-financiero` / `control-financiero-app`     |
 | `JWT_VALIDITY_MS`           | `604800000` (7 días)                                  |
 
 Nunca commitear tokens reales. `.env` y `local.properties` están en `.gitignore`.
+Generar un secret fuerte (≥ 32 chars): `openssl rand -base64 48`. En prod, setear `APP_ENV=production` + `JWT_SECRET`.
 
 ## Convenciones
 
@@ -133,10 +135,12 @@ Nunca commitear tokens reales. `.env` y `local.properties` están en `.gitignore
 - ✅ Resuelto (2026-05-30): agregado `android/app/proguard-rules.pro` (faltaba; rompía el build de release).
 - ✅ Resuelto (2026-05-30): `MercadoPagoService` parseaba mal fechas con offset negativo (AR `-03:00`); ahora usa `OffsetDateTime`.
 - ✅ Resuelto (2026-05-30): `getDashboard` ahora ordena por fecha DESC antes de `take(10)` (transacciones recientes).
-- ⚠️ **A verificar (lógica de negocio):** en `MercadoPagoService.syncPayments`, `operationType == "regular_payment"` se clasifica como **ingreso**. Según el rol de la cuenta MP esto puede estar invertido — validar con datos reales antes de confiar en el dashboard.
+- ✅ Resuelto (2026-05-31): `MercadoPagoService.syncPayments` ya no adivina ingreso/egreso por `operation_type`. Consulta `GET /users/me` una vez y clasifica por `collector_id`: si la cuenta cobró → **ingreso**, si no → **egreso** (`classify()`). Si `/users/me` falla, cae a la heurística previa.
+- ⚠️ **A verificar (alcance del endpoint):** el caso de uso real es una **cuenta personal de pago** (servicios/compras → egresos). Pero `/v1/payments/search` es *collector-scoped*: lista pagos que la cuenta **cobró**, no necesariamente los que **pagó**. Riesgo: con una cuenta pagadora, la sync puede devolver pocos/ningún gasto. Validar con un token real; si no aparecen los gastos, hace falta otra fuente de datos (movimientos de cuenta MP), que es un cambio mayor.
 - ✅ Verificado por CI (2026-05-30): backend y Android compilan en limpio en GitHub Actions (`.github/workflows/ci.yml`).
 - ✅ Resuelto (2026-05-30): bug **preexistente** en `Tables.kt` — la columna se llamaba `source`, que choca con `ColumnSet.source` de Exposed 0.57 y hacía que el backend **no compilara**. Propiedad renombrada a `sourceCol` (la columna en la DB sigue siendo `"source"`). ⚠️ Gotcha al agregar columnas Exposed: evitar nombres que existan en `ColumnSet`/`Table`.
 - ✅ Resuelto (2026-05-30): OOM de R8/D8 en CI → `org.gradle.jvmargs=-Xmx4g` en `android/gradle.properties`.
+- ✅ Resuelto (2026-05-31): guard de `JWT_SECRET` — con `APP_ENV≠development` el backend hace fail-fast si sigue el secret por defecto; en dev solo advierte (`plugins/Security.kt`).
 - Roadmap (del README): auth JWT, gráficos Vico en la app, historial con filtros,
   notificaciones de gastos altos, export Excel/PDF, presupuestos por categoría,
   integración Brubank.

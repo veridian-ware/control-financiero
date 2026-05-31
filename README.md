@@ -57,8 +57,11 @@ control-financiero/
    export DATABASE_USER=postgres
    export DATABASE_PASSWORD=tu_password
    export MERCADOPAGO_ACCESS_TOKEN=tu_access_token
-   export JWT_SECRET=un_secreto_largo_y_aleatorio
+   export JWT_SECRET=un_secreto_largo_y_aleatorio   # generar con: openssl rand -base64 48
+   export APP_ENV=production                         # en prod: fuerza un JWT_SECRET propio
    ```
+   > En producción (`APP_ENV` distinto de `development`) el server **no arranca** si el
+   > `JWT_SECRET` sigue siendo el de desarrollo por defecto.
 
 3. Ejecutar:
    ```bash
