@@ -70,4 +70,7 @@ dependencies {
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+
+    // DataStore (persistencia del token de sesión)
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
 }

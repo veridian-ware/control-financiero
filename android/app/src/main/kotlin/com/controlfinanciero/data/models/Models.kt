@@ -72,3 +72,35 @@ data class SyncResult(
     val skipped: Int,
     val errors: Int
 )
+
+// --- Autenticación ---
+
+@Serializable
+data class RegisterRequest(
+    val email: String,
+    val password: String
+)
+
+@Serializable
+data class LoginRequest(
+    val email: String,
+    val password: String
+)
+
+@Serializable
+data class User(
+    val id: Int,
+    val email: String,
+    val hasMercadoPagoToken: Boolean = false
+)
+
+@Serializable
+data class AuthResponse(
+    val token: String,
+    val user: User
+)
+
+@Serializable
+data class SetMpTokenRequest(
+    val accessToken: String
+)
