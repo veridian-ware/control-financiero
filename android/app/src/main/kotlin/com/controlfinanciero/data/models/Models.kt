@@ -104,3 +104,48 @@ data class AuthResponse(
 data class SetMpTokenRequest(
     val accessToken: String
 )
+
+// --- Recurrentes (ingresos/egresos fijos) ---
+
+@Serializable
+data class RecurringTransaction(
+    val id: Int? = null,
+    val amount: Double,
+    val description: String,
+    val type: String, // "ingreso" o "egreso"
+    val categoryId: Int,
+    val categoryName: String? = null,
+    val dayOfMonth: Int, // 1..28
+    val active: Boolean = true
+)
+
+@Serializable
+data class CreateRecurringRequest(
+    val amount: Double,
+    val description: String,
+    val type: String,
+    val categoryId: Int,
+    val dayOfMonth: Int
+)
+
+// --- Hogar compartido ---
+
+@Serializable
+data class HouseholdMember(
+    val id: Int,
+    val email: String
+)
+
+@Serializable
+data class Household(
+    val id: Int,
+    val name: String,
+    val inviteCode: String,
+    val members: List<HouseholdMember>
+)
+
+@Serializable
+data class CreateHouseholdRequest(val name: String)
+
+@Serializable
+data class JoinHouseholdRequest(val inviteCode: String)

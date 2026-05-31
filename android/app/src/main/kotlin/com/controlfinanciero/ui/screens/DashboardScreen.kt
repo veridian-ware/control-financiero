@@ -30,6 +30,8 @@ fun DashboardScreen(
     onRefresh: () -> Unit,
     onAddTransaction: () -> Unit,
     onSyncMercadoPago: () -> Unit,
+    onOpenRecurring: () -> Unit,
+    onOpenHousehold: () -> Unit,
     onLogout: () -> Unit
 ) {
     val currencyFormat = remember { NumberFormat.getCurrencyInstance(Locale("es", "AR")) }
@@ -39,6 +41,12 @@ fun DashboardScreen(
             TopAppBar(
                 title = { Text("Control Financiero") },
                 actions = {
+                    IconButton(onClick = onOpenRecurring) {
+                        Icon(Icons.Default.Repeat, contentDescription = "Ingresos/gastos fijos")
+                    }
+                    IconButton(onClick = onOpenHousehold) {
+                        Icon(Icons.Default.Group, contentDescription = "Hogar compartido")
+                    }
                     IconButton(onClick = onSyncMercadoPago) {
                         Icon(Icons.Default.Sync, contentDescription = "Sincronizar MP")
                     }
