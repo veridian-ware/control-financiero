@@ -57,6 +57,7 @@ control-financiero/
    export DATABASE_USER=postgres
    export DATABASE_PASSWORD=tu_password
    export MERCADOPAGO_ACCESS_TOKEN=tu_access_token
+   export JWT_SECRET=un_secreto_largo_y_aleatorio
    ```
 
 3. Ejecutar:
@@ -87,8 +88,15 @@ control-financiero/
 
 ## API Endpoints
 
+Todas las rutas excepto `register` y `login` requieren `Authorization: Bearer <token>`.
+Cada usuario solo ve sus propios datos (multi-tenant).
+
 | Método | Ruta | Descripción |
 |---|---|---|
+| POST | `/api/auth/register` | Crear cuenta → `{ token, user }` |
+| POST | `/api/auth/login` | Iniciar sesión → `{ token, user }` |
+| GET | `/api/auth/me` | Usuario autenticado |
+| POST | `/api/mercadopago/token` | Guardar el token de Mercado Pago del usuario |
 | GET | `/api/categories` | Listar categorías |
 | POST | `/api/categories` | Crear categoría |
 | POST | `/api/categories/seed` | Crear categorías por defecto |
@@ -101,7 +109,7 @@ control-financiero/
 
 ## Próximas funcionalidades
 
-- [ ] Autenticación JWT
+- [x] Autenticación JWT (multi-tenant, datos por usuario)
 - [ ] Gráficos mensuales en la app (Vico Charts)
 - [ ] Pantalla de historial con filtros
 - [ ] Notificaciones de gastos altos
