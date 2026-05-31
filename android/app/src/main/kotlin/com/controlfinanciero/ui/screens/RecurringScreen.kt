@@ -25,7 +25,7 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecurringScreen(
-    items: List<RecurringTransaction>,
+    recurrences: List<RecurringTransaction>,
     categories: List<Category>,
     onAdd: (CreateRecurringRequest) -> Unit,
     onDelete: (Int) -> Unit,
@@ -51,7 +51,7 @@ fun RecurringScreen(
             }
         }
     ) { padding ->
-        if (items.isEmpty()) {
+        if (recurrences.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Text(
                     "Definí un ingreso o gasto fijo (ej: tus haberes el día 1) y se registra solo cada mes.",
@@ -65,7 +65,7 @@ fun RecurringScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(items) { item ->
+                items(recurrences) { item ->
                     RecurringItem(item, currencyFormat, onDelete)
                 }
             }

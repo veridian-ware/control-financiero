@@ -93,7 +93,7 @@ private fun AppNavigation(onLogout: () -> Unit) {
             val recurringItems by recurringViewModel.items.collectAsState()
             val recurringCategories by recurringViewModel.categories.collectAsState()
             RecurringScreen(
-                items = recurringItems,
+                recurrences = recurringItems,
                 categories = recurringCategories,
                 onAdd = { recurringViewModel.create(it) },
                 onDelete = { recurringViewModel.delete(it) },
