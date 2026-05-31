@@ -1,8 +1,19 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.plugin.serialization")
+}
+
+// IP del backend para correr en un dispositivo físico (mismo Wi-Fi que la PC).
+// Se lee de local.properties (no versionado) con la clave `device.api.host`;
+// si no está, usa el fallback. El emulador siempre usa 10.0.2.2 (alias del host).
+val deviceApiHost: String = Properties().run {
+    val localFile = rootProject.file("local.properties")
+    if (localFile.exists()) localFile.inputStream().use { load(it) }
+    (getProperty("device.api.host") ?: "192.168.101.75").trim()
 }
 
 android {
@@ -15,8 +26,20 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
+    }
 
-        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080\"")
+    flavorDimensions += "target"
+    productFlavors {
+        create("emulator") {
+            dimension = "target"
+            // 10.0.2.2 = alias del localhost de la PC desde el emulador de Android.
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080\"")
+        }
+        create("device") {
+            dimension = "target"
+            // IP de la PC en la LAN (configurable en local.properties -> device.api.host).
+            buildConfigField("String", "API_BASE_URL", "\"http://$deviceApiHost:8080\"")
+        }
     }
 
     buildTypes {
