@@ -60,6 +60,47 @@ data class MonthlyReport(
 )
 
 @Serializable
+data class RecurringTransactionDTO(
+    val id: Int? = null,
+    val amount: Double,
+    val description: String,
+    val type: String, // "ingreso" o "egreso"
+    val categoryId: Int,
+    val categoryName: String? = null,
+    val dayOfMonth: Int, // 1..28
+    val active: Boolean = true
+)
+
+@Serializable
+data class CreateRecurringRequest(
+    val amount: Double,
+    val description: String,
+    val type: String,
+    val categoryId: Int,
+    val dayOfMonth: Int
+)
+
+@Serializable
+data class HouseholdMemberDTO(
+    val id: Int,
+    val email: String
+)
+
+@Serializable
+data class HouseholdDTO(
+    val id: Int,
+    val name: String,
+    val inviteCode: String,
+    val members: List<HouseholdMemberDTO>
+)
+
+@Serializable
+data class CreateHouseholdRequest(val name: String)
+
+@Serializable
+data class JoinHouseholdRequest(val inviteCode: String)
+
+@Serializable
 data class ApiResponse<T>(
     val success: Boolean,
     val data: T? = null,

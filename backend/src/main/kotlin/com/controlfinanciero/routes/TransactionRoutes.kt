@@ -3,6 +3,7 @@ package com.controlfinanciero.routes
 import com.controlfinanciero.models.dto.ApiResponse
 import com.controlfinanciero.models.dto.CreateTransactionRequest
 import com.controlfinanciero.plugins.userId
+import com.controlfinanciero.repositories.HouseholdRepository
 import com.controlfinanciero.repositories.TransactionRepository
 import io.ktor.http.*
 import io.ktor.server.request.*
@@ -12,6 +13,7 @@ import java.time.LocalDateTime
 
 fun Route.transactionRoutes() {
     val repository = TransactionRepository()
+    val households = HouseholdRepository()
 
     route("/api/transactions") {
         get {
@@ -22,7 +24,8 @@ fun Route.transactionRoutes() {
             val limit = call.queryParameters["limit"]?.toIntOrNull() ?: 50
             val offset = call.queryParameters["offset"]?.toLongOrNull() ?: 0
 
-            val transactions = repository.getAll(call.userId(), type, categoryId, from, to, limit, offset)
+            val scope = households.memberIds(call.userId()) // hogar compartido o solo el usuario
+            val transactions = repository.getAll(scope, type, categoryId, from, to, limit, offset)
             call.respond(ApiResponse(true, data = transactions))
         }
 

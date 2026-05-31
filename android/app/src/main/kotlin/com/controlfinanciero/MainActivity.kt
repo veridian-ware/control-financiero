@@ -17,9 +17,13 @@ import androidx.navigation.compose.rememberNavController
 import com.controlfinanciero.ui.screens.AddTransactionScreen
 import com.controlfinanciero.ui.screens.AuthScreen
 import com.controlfinanciero.ui.screens.DashboardScreen
+import com.controlfinanciero.ui.screens.HouseholdScreen
+import com.controlfinanciero.ui.screens.RecurringScreen
 import com.controlfinanciero.ui.theme.ControlFinancieroTheme
 import com.controlfinanciero.ui.viewmodels.AuthViewModel
 import com.controlfinanciero.ui.viewmodels.DashboardViewModel
+import com.controlfinanciero.ui.viewmodels.HouseholdViewModel
+import com.controlfinanciero.ui.viewmodels.RecurringViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,6 +72,8 @@ private fun AppNavigation(onLogout: () -> Unit) {
                 onRefresh = { viewModel.loadDashboard() },
                 onAddTransaction = { navController.navigate("add_transaction") },
                 onSyncMercadoPago = { viewModel.syncMercadoPago { /* TODO: snackbar */ } },
+                onOpenRecurring = { navController.navigate("recurring") },
+                onOpenHousehold = { navController.navigate("household") },
                 onLogout = onLogout
             )
         }
@@ -80,6 +86,33 @@ private fun AppNavigation(onLogout: () -> Unit) {
                     }
                 },
                 onBack = { navController.popBackStack() }
+            )
+        }
+        composable("recurring") {
+            val recurringViewModel: RecurringViewModel = viewModel()
+            val recurringItems by recurringViewModel.items.collectAsState()
+            val recurringCategories by recurringViewModel.categories.collectAsState()
+            RecurringScreen(
+                recurrences = recurringItems,
+                categories = recurringCategories,
+                onAdd = { recurringViewModel.create(it) },
+                onDelete = { recurringViewModel.delete(it) },
+                // Al volver recargamos el dashboard: pudo materializarse una transacción.
+                onBack = { viewModel.loadDashboard(); navController.popBackStack() }
+            )
+        }
+        composable("household") {
+            val householdViewModel: HouseholdViewModel = viewModel()
+            val household by householdViewModel.household.collectAsState()
+            val householdLoading by householdViewModel.isLoading.collectAsState()
+            HouseholdScreen(
+                household = household,
+                isLoading = householdLoading,
+                onCreate = { householdViewModel.create(it) },
+                onJoin = { householdViewModel.join(it) },
+                onLeave = { householdViewModel.leave() },
+                // Cambiar de hogar cambia qué datos se ven: recargamos el dashboard.
+                onBack = { viewModel.loadDashboard(); navController.popBackStack() }
             )
         }
     }

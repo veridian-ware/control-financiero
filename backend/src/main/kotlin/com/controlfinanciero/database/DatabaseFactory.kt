@@ -1,6 +1,8 @@
 package com.controlfinanciero.database
 
 import com.controlfinanciero.models.db.Categories
+import com.controlfinanciero.models.db.Households
+import com.controlfinanciero.models.db.RecurringTransactions
 import com.controlfinanciero.models.db.Transactions
 import com.controlfinanciero.models.db.Users
 import com.zaxxer.hikari.HikariConfig
@@ -35,8 +37,12 @@ object DatabaseFactory {
         Database.connect(dataSource)
 
         transaction {
-            // Orden importa por las foreign keys: Users <- Categories <- Transactions
-            SchemaUtils.create(Users, Categories, Transactions)
+            // Orden importa por las foreign keys: Households <- Users <- Categories <- Transactions.
+            // createMissingTablesAndColumns agrega tablas/columnas nuevas a una DB ya existente
+            // (ej: users.household_id, recurring_transactions).
+            SchemaUtils.createMissingTablesAndColumns(
+                Households, Users, Categories, Transactions, RecurringTransactions
+            )
         }
     }
 

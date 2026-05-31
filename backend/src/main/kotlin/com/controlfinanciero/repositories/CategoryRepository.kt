@@ -72,8 +72,8 @@ class CategoryRepository {
         val alreadyHas = Categories.selectAll().where { Categories.userId eq userId }.count() > 0L
         if (!alreadyHas) {
             val defaults = listOf(
-                CategoryDTO(name = "Salario", type = "ingreso", icon = "work", color = "#4CAF50"),
-                CategoryDTO(name = "Freelance", type = "ingreso", icon = "laptop", color = "#8BC34A"),
+                CategoryDTO(name = "Haberes", type = "ingreso", icon = "work", color = "#4CAF50"),
+                CategoryDTO(name = "Trabajo extra", type = "ingreso", icon = "laptop", color = "#8BC34A"),
                 CategoryDTO(name = "Inversiones", type = "ingreso", icon = "trending_up", color = "#00BCD4"),
                 CategoryDTO(name = "Otros ingresos", type = "ingreso", icon = "add_circle", color = "#009688"),
                 CategoryDTO(name = "Alimentación", type = "egreso", icon = "restaurant", color = "#FF5722"),

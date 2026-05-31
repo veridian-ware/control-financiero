@@ -20,8 +20,14 @@ data class MercadoPagoPayment(
     @SerialName("transaction_amount") val transactionAmount: Double,
     @SerialName("date_created") val dateCreated: String,
     @SerialName("payment_type_id") val paymentTypeId: String? = null,
-    @SerialName("operation_type") val operationType: String? = null
+    @SerialName("operation_type") val operationType: String? = null,
+    // Quién cobró el pago. Si coincide con la cuenta autenticada, la plata entró (ingreso).
+    @SerialName("collector_id") val collectorId: Long? = null
 )
+
+/** Respuesta de GET /users/me: identifica la cuenta dueña del access token. */
+@Serializable
+data class MercadoPagoUser(val id: Long)
 
 @Serializable
 data class MercadoPagoSearchResponse(
@@ -68,6 +74,10 @@ class MercadoPagoService(
         var skipped = 0
         var errors = 0
 
+        // Id de la cuenta dueña del token: permite saber, por pago, si cobramos (ingreso)
+        // o pagamos (egreso). Si falla, caemos a la heurística por operation_type.
+        val accountId = fetchAccountId()
+
         do {
             val response: MercadoPagoSearchResponse = client.get("$baseUrl/v1/payments/search") {
                 header("Authorization", "Bearer $accessToken")
@@ -86,8 +96,7 @@ class MercadoPagoService(
                 }
 
                 try {
-                    val isIngreso = payment.operationType == "regular_payment"
-                    val type = if (isIngreso) "ingreso" else "egreso"
+                    val type = classify(payment, accountId)
                     // date_created viene en ISO 8601 con offset (ej: "...T10:15:30.000-03:00").
                     // OffsetDateTime soporta cualquier offset (+/-); el LocalDateTime.parse anterior
                     // fallaba con offsets negativos (Argentina = -03:00).
@@ -112,6 +121,29 @@ class MercadoPagoService(
         } while (offset < response.paging.total)
 
         return SyncResult(imported, skipped, errors)
+    }
+
+    /** Id de la cuenta MP dueña del token. Devuelve null si la consulta falla (token inválido, red, etc.). */
+    private suspend fun fetchAccountId(): Long? = try {
+        client.get("$baseUrl/users/me") {
+            header("Authorization", "Bearer $accessToken")
+        }.body<MercadoPagoUser>().id
+    } catch (e: Exception) {
+        null
+    }
+
+    /**
+     * Determina si un pago es "ingreso" o "egreso":
+     *  - Si conocemos la cuenta (accountId) y el pago tiene collector_id: ingreso si la cuenta
+     *    fue quien cobró; egreso si no (en /payments/search siempre estamos en una de las puntas).
+     *  - Si no (sin accountId o sin collector_id): heurística previa por operation_type.
+     */
+    private fun classify(payment: MercadoPagoPayment, accountId: Long?): String {
+        val isIngreso = when {
+            accountId != null && payment.collectorId != null -> payment.collectorId == accountId
+            else -> payment.operationType == "regular_payment"
+        }
+        return if (isIngreso) "ingreso" else "egreso"
     }
 
     fun close() = client.close()

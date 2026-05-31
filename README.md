@@ -57,8 +57,11 @@ control-financiero/
    export DATABASE_USER=postgres
    export DATABASE_PASSWORD=tu_password
    export MERCADOPAGO_ACCESS_TOKEN=tu_access_token
-   export JWT_SECRET=un_secreto_largo_y_aleatorio
+   export JWT_SECRET=un_secreto_largo_y_aleatorio   # generar con: openssl rand -base64 48
+   export APP_ENV=production                         # en prod: fuerza un JWT_SECRET propio
    ```
+   > En producción (`APP_ENV` distinto de `development`) el server **no arranca** si el
+   > `JWT_SECRET` sigue siendo el de desarrollo por defecto.
 
 3. Ejecutar:
    ```bash
@@ -106,13 +109,18 @@ Cada usuario solo ve sus propios datos (multi-tenant).
 | GET | `/api/dashboard` | Dashboard del mes actual |
 | GET | `/api/dashboard/monthly/{year}` | Reporte mensual anual |
 | POST | `/api/mercadopago/sync` | Sincronizar pagos de Mercado Pago |
+| GET/POST/DELETE | `/api/recurring` | Ingresos/egresos fijos mensuales |
+| GET/POST | `/api/household` | Hogar compartido (crear, ver) |
+| POST | `/api/household/join` · `/leave` | Unirse por código / salir |
 
 ## Próximas funcionalidades
 
 - [x] Autenticación JWT (multi-tenant, datos por usuario)
+- [x] Ingresos/egresos recurrentes (ej: haberes mensuales, se registran solos)
+- [x] Hogar compartido (dos personas sincronizan ingresos y gastos)
 - [ ] Gráficos mensuales en la app (Vico Charts)
 - [ ] Pantalla de historial con filtros
 - [ ] Notificaciones de gastos altos
 - [ ] Export a Excel/PDF
 - [ ] Presupuestos por categoría
-- [ ] Integración Brubank (cuando API disponible)
+- [ ] Integración Brubank — pendiente: sin API pública oficial; el sueldo se cubre con recurrentes

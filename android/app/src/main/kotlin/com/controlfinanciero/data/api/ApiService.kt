@@ -59,4 +59,30 @@ interface ApiService {
         @Query("to") to: String? = null,
         @Query("categoryId") categoryId: Int? = null
     ): ApiResponse<SyncResult>
+
+    // Recurrentes (ingresos/egresos fijos)
+    @GET("api/recurring")
+    suspend fun getRecurring(): ApiResponse<List<RecurringTransaction>>
+
+    @POST("api/recurring")
+    suspend fun createRecurring(@Body request: CreateRecurringRequest): ApiResponse<RecurringTransaction>
+
+    @POST("api/recurring/run")
+    suspend fun runRecurring(): ApiResponse<Int>
+
+    @DELETE("api/recurring/{id}")
+    suspend fun deleteRecurring(@Path("id") id: Int): ApiResponse<String>
+
+    // Hogar compartido
+    @GET("api/household")
+    suspend fun getHousehold(): ApiResponse<Household>
+
+    @POST("api/household")
+    suspend fun createHousehold(@Body request: CreateHouseholdRequest): ApiResponse<Household>
+
+    @POST("api/household/join")
+    suspend fun joinHousehold(@Body request: JoinHouseholdRequest): ApiResponse<Household>
+
+    @POST("api/household/leave")
+    suspend fun leaveHousehold(): ApiResponse<String>
 }

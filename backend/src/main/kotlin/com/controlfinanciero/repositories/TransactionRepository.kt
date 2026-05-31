@@ -25,7 +25,7 @@ class TransactionRepository {
     )
 
     suspend fun getAll(
-        userId: Int,
+        userIds: List<Int>,
         type: String? = null,
         categoryId: Int? = null,
         from: LocalDateTime? = null,
@@ -35,7 +35,7 @@ class TransactionRepository {
     ): List<TransactionDTO> = dbQuery {
         val query = Transactions.join(Categories, JoinType.LEFT, Transactions.categoryId, Categories.id)
             .selectAll()
-            .where { Transactions.userId eq userId }
+            .where { Transactions.userId inList userIds }
 
         type?.let { query.andWhere { Transactions.type eq it } }
         categoryId?.let { query.andWhere { Transactions.categoryId eq it } }
@@ -119,12 +119,12 @@ class TransactionRepository {
         Transactions.deleteWhere { (Transactions.id eq id) and (Transactions.userId eq userId) } > 0
     }
 
-    suspend fun getDashboard(userId: Int, from: LocalDateTime, to: LocalDateTime): DashboardDTO = dbQuery {
+    suspend fun getDashboard(userIds: List<Int>, from: LocalDateTime, to: LocalDateTime): DashboardDTO = dbQuery {
         val transactions = Transactions
             .join(Categories, JoinType.LEFT, Transactions.categoryId, Categories.id)
             .selectAll()
             .where {
-                (Transactions.userId eq userId) and
+                (Transactions.userId inList userIds) and
                     (Transactions.date greaterEq from) and (Transactions.date lessEq to)
             }
             .orderBy(Transactions.date, SortOrder.DESC)
@@ -152,13 +152,13 @@ class TransactionRepository {
         )
     }
 
-    suspend fun getMonthlyReport(userId: Int, year: Int): List<MonthlyReport> = dbQuery {
+    suspend fun getMonthlyReport(userIds: List<Int>, year: Int): List<MonthlyReport> = dbQuery {
         val from = LocalDateTime.of(year, 1, 1, 0, 0)
         val to = LocalDateTime.of(year, 12, 31, 23, 59, 59)
 
         val transactions = Transactions.selectAll()
             .where {
-                (Transactions.userId eq userId) and
+                (Transactions.userId inList userIds) and
                     (Transactions.date greaterEq from) and (Transactions.date lessEq to)
             }
             .map {

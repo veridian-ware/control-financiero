@@ -16,12 +16,19 @@ private const val CLAIM_EMAIL = "email"
 
 const val JWT_AUTH = "auth-jwt"
 
+/** Secret de desarrollo. Solo válido en entorno `development`; en prod el server no arranca con esto. */
+private const val DEV_JWT_SECRET = "dev-secret-cambiar-en-produccion"
+private const val MIN_SECRET_LENGTH = 32
+
 fun Application.configureSecurity() {
     val config = environment.config
     val secret = config.property("jwt.secret").getString()
     val issuer = config.property("jwt.issuer").getString()
     val audience = config.property("jwt.audience").getString()
     val realmValue = config.property("jwt.realm").getString()
+    val appEnv = config.propertyOrNull("app.environment")?.getString() ?: "development"
+
+    validateJwtSecret(secret, appEnv)
 
     install(Authentication) {
         jwt(JWT_AUTH) {
@@ -44,6 +51,33 @@ fun Application.configureSecurity() {
                 )
             }
         }
+    }
+}
+
+/**
+ * Valida el JWT secret al arrancar. En entorno productivo (`app.environment != "development"`)
+ * hace fail-fast si sigue el secret de desarrollo; en dev solo avisa. Además advierte si el
+ * secret es demasiado corto.
+ */
+private fun Application.validateJwtSecret(secret: String, appEnv: String) {
+    val isProd = !appEnv.equals("development", ignoreCase = true)
+    when {
+        secret == DEV_JWT_SECRET && isProd ->
+            error(
+                "JWT_SECRET inseguro: el server no arranca en entorno '$appEnv' con el secret de " +
+                    "desarrollo por defecto. Seteá la variable de entorno JWT_SECRET con un valor " +
+                    "fuerte y aleatorio (>= $MIN_SECRET_LENGTH caracteres)."
+            )
+        secret == DEV_JWT_SECRET ->
+            log.warn(
+                "⚠️  Usando el JWT_SECRET de desarrollo por defecto. NO usar en producción: " +
+                    "seteá JWT_SECRET y APP_ENV=production."
+            )
+        secret.length < MIN_SECRET_LENGTH ->
+            log.warn(
+                "⚠️  JWT_SECRET es corto (${secret.length} < $MIN_SECRET_LENGTH caracteres). " +
+                    "Usá un valor más largo y aleatorio."
+            )
     }
 }
 
