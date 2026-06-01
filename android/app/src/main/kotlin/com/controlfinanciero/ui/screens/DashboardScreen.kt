@@ -6,7 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -30,9 +29,7 @@ fun DashboardScreen(
     onRefresh: () -> Unit,
     onAddTransaction: () -> Unit,
     onSyncMercadoPago: () -> Unit,
-    onOpenRecurring: () -> Unit,
-    onOpenHousehold: () -> Unit,
-    onLogout: () -> Unit
+    onOpenMenu: () -> Unit
 ) {
     val currencyFormat = remember { NumberFormat.getCurrencyInstance(Locale("es", "AR")) }
 
@@ -40,21 +37,17 @@ fun DashboardScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Control Financiero") },
+                navigationIcon = {
+                    IconButton(onClick = onOpenMenu) {
+                        Icon(Icons.Default.Menu, contentDescription = "Menú")
+                    }
+                },
                 actions = {
-                    IconButton(onClick = onOpenRecurring) {
-                        Icon(Icons.Default.Repeat, contentDescription = "Ingresos/gastos fijos")
-                    }
-                    IconButton(onClick = onOpenHousehold) {
-                        Icon(Icons.Default.Group, contentDescription = "Hogar compartido")
-                    }
                     IconButton(onClick = onSyncMercadoPago) {
                         Icon(Icons.Default.Sync, contentDescription = "Sincronizar MP")
                     }
                     IconButton(onClick = onRefresh) {
                         Icon(Icons.Default.Refresh, contentDescription = "Refrescar")
-                    }
-                    IconButton(onClick = onLogout) {
-                        Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Cerrar sesión")
                     }
                 }
             )

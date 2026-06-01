@@ -17,9 +17,10 @@ fun AuthScreen(
     isLoading: Boolean,
     error: String?,
     onLogin: (String, String) -> Unit,
-    onRegister: (String, String) -> Unit
+    onRegister: (String, String, String?) -> Unit
 ) {
     var isRegister by remember { mutableStateOf(false) }
+    var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -44,6 +45,17 @@ fun AuthScreen(
             )
 
             Spacer(Modifier.height(32.dp))
+
+            if (isRegister) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Nombre (opcional)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(12.dp))
+            }
 
             OutlinedTextField(
                 value = email,
@@ -80,7 +92,7 @@ fun AuthScreen(
 
             Button(
                 onClick = {
-                    if (isRegister) onRegister(email, password) else onLogin(email, password)
+                    if (isRegister) onRegister(email, password, name) else onLogin(email, password)
                 },
                 enabled = formValid && !isLoading,
                 modifier = Modifier

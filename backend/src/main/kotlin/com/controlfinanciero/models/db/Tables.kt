@@ -15,6 +15,7 @@ object Households : Table("households") {
 object Users : Table("users") {
     val id = integer("id").autoIncrement()
     val email = varchar("email", 255).uniqueIndex()
+    val name = varchar("name", 100).nullable() // nombre para mostrar en el perfil
     val passwordHash = varchar("password_hash", 60) // BCrypt produce hashes de 60 chars
     val mpAccessToken = varchar("mp_access_token", 255).nullable() // token de Mercado Pago por usuario
     val householdId = integer("household_id").references(Households.id).nullable() // hogar compartido (opcional)

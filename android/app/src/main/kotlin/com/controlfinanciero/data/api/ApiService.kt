@@ -15,6 +15,9 @@ interface ApiService {
     @GET("api/auth/me")
     suspend fun me(): ApiResponse<User>
 
+    @PUT("api/auth/me")
+    suspend fun updateProfile(@Body request: UpdateProfileRequest): ApiResponse<User>
+
     @POST("api/mercadopago/token")
     suspend fun setMercadoPagoToken(@Body request: SetMpTokenRequest): ApiResponse<String>
 

@@ -15,6 +15,7 @@ class UserRepository {
     private fun ResultRow.toUserDTO() = UserDTO(
         id = this[Users.id],
         email = this[Users.email],
+        name = this[Users.name],
         hasMercadoPagoToken = this[Users.mpAccessToken] != null
     )
 
@@ -22,13 +23,14 @@ class UserRepository {
         Users.selectAll().where { Users.email eq email }.count() > 0
     }
 
-    suspend fun create(email: String, passwordHash: String): UserDTO = dbQuery {
+    suspend fun create(email: String, passwordHash: String, name: String? = null): UserDTO = dbQuery {
         val id = Users.insert {
             it[Users.email] = email
             it[Users.passwordHash] = passwordHash
+            it[Users.name] = name
             it[createdAt] = LocalDateTime.now()
         } get Users.id
-        UserDTO(id = id, email = email, hasMercadoPagoToken = false)
+        UserDTO(id = id, email = email, name = name, hasMercadoPagoToken = false)
     }
 
     suspend fun findCredentialsByEmail(email: String): UserCredentials? = dbQuery {
@@ -48,6 +50,12 @@ class UserRepository {
     suspend fun setMpToken(userId: Int, token: String): Boolean = dbQuery {
         Users.update({ Users.id eq userId }) {
             it[mpAccessToken] = token
+        } > 0
+    }
+
+    suspend fun updateName(userId: Int, name: String): Boolean = dbQuery {
+        Users.update({ Users.id eq userId }) {
+            it[Users.name] = name
         } > 0
     }
 }

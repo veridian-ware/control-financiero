@@ -5,7 +5,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class RegisterRequest(
     val email: String,
-    val password: String
+    val password: String,
+    val name: String? = null
 )
 
 @Serializable
@@ -18,6 +19,7 @@ data class LoginRequest(
 data class UserDTO(
     val id: Int,
     val email: String,
+    val name: String? = null,
     val hasMercadoPagoToken: Boolean = false
 )
 
@@ -30,4 +32,9 @@ data class AuthResponse(
 @Serializable
 data class SetMpTokenRequest(
     val accessToken: String
+)
+
+@Serializable
+data class UpdateProfileRequest(
+    val name: String
 )
