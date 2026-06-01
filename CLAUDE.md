@@ -51,7 +51,13 @@ curl -X POST http://localhost:8080/api/categories/seed
 
 ### Android
 - Abrir la carpeta `android/` en Android Studio (NO la raíz).
-- `BuildConfig.API_BASE_URL` = `http://10.0.2.2:8080` (localhost del backend desde el emulador).
+- `BuildConfig.API_BASE_URL` depende del **product flavor** (dimensión `target`, en `app/build.gradle.kts`):
+  - `emulator` → `http://10.0.2.2:8080` (alias del localhost de la PC desde el emulador).
+  - `device` → `http://<device.api.host>:8080` para un **celular físico**. La IP se lee de
+    `local.properties` (clave `device.api.host`, no versionado) con fallback `192.168.101.75`.
+- Elegir la variante en el panel **Build Variants** de AS (`:app` → `deviceDebug` o `emulatorDebug`).
+- Para el celu físico: backend corriendo, misma red Wi-Fi, y abrir el puerto 8080 en el
+  firewall de Windows (`New-NetFirewallRule ... -LocalPort 8080 -Action Allow`).
 - Build & Run sobre emulador o dispositivo.
 
 ## Arquitectura
@@ -155,6 +161,7 @@ Generar un secret fuerte (≥ 32 chars): `openssl rand -base64 48`. En prod, set
 - ✅ Resuelto (2026-05-31): guard de `JWT_SECRET` — con `APP_ENV≠development` el backend hace fail-fast si sigue el secret por defecto; en dev solo advierte (`plugins/Security.kt`).
 - ✅ Agregado (2026-05-31): **ingresos/egresos recurrentes** (`recurring_transactions`). Reemplazo práctico de "integrar Brubank": el sueldo se define una vez y se materializa solo cada mes al abrir el dashboard. Brubank no tiene API pública oficial.
 - ✅ Agregado (2026-05-31): **hogar compartido** — dos personas (ej: pareja) comparten ingresos y gastos. Modelo elegido: visibilidad compartida vía `households` + `users.household_id`; cada transacción mantiene su dueño. ⚠️ Limitaciones MVP a evaluar: el dashboard agrupa "por categoría" por `categoryId`, así que categorías homónimas de distintos usuarios aparecen separadas; `getById`/`delete` siguen restringidos al dueño.
+- ✅ Agregado (2026-05-31): **product flavors `emulator`/`device`** (dimensión `target`) para correr en celular físico sin editar la URL cada vez. `device` lee la IP de la PC de `local.properties` (`device.api.host`, gitignored) con fallback. ⚠️ Gotchas: la IP de DHCP puede cambiar (actualizar `device.api.host`); el celu necesita mismo Wi-Fi + puerto 8080 abierto en el firewall; el CI ahora compila ambos flavors en `assembleDebug` (el flavor `device` usa el fallback porque no hay `local.properties` en CI).
 - Roadmap (del README): auth JWT, gráficos Vico en la app, historial con filtros,
   notificaciones de gastos altos, export Excel/PDF, presupuestos por categoría,
   integración Brubank.

@@ -1,6 +1,7 @@
 # Gradle
 .gradle/
 build/
+.kotlin/
 !gradle/wrapper/
 
 # IDE
@@ -26,3 +27,6 @@ Thumbs.db
 
 # Env
 .env
+
+# Scripts locales de dev (pueden contener credenciales) — nunca versionar
+*.local.bat
