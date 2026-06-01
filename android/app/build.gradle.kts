@@ -7,14 +7,15 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization")
 }
 
-// IP del backend para correr en un dispositivo físico (mismo Wi-Fi que la PC).
-// Se lee de local.properties (no versionado) con la clave `device.api.host`;
-// si no está, usa el fallback. El emulador siempre usa 10.0.2.2 (alias del host).
-val deviceApiHost: String = Properties().run {
+// Config local del backend para desarrollo, leída de local.properties (no versionado).
+// `device.api.host`: IP de la PC en la LAN para correr en un celular físico (fallback abajo).
+// `api.port`: puerto del backend (default 8080; se override si el 8080 está ocupado, ej: Apache).
+val localProps = Properties().apply {
     val localFile = rootProject.file("local.properties")
     if (localFile.exists()) localFile.inputStream().use { load(it) }
-    (getProperty("device.api.host") ?: "192.168.101.75").trim()
 }
+val deviceApiHost: String = (localProps.getProperty("device.api.host") ?: "192.168.101.75").trim()
+val apiPort: String = (localProps.getProperty("api.port") ?: "8080").trim()
 
 android {
     namespace = "com.controlfinanciero"
@@ -33,12 +34,12 @@ android {
         create("emulator") {
             dimension = "target"
             // 10.0.2.2 = alias del localhost de la PC desde el emulador de Android.
-            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:$apiPort\"")
         }
         create("device") {
             dimension = "target"
-            // IP de la PC en la LAN (configurable en local.properties -> device.api.host).
-            buildConfigField("String", "API_BASE_URL", "\"http://$deviceApiHost:8080\"")
+            // IP de la PC en la LAN + puerto (configurables en local.properties).
+            buildConfigField("String", "API_BASE_URL", "\"http://$deviceApiHost:$apiPort\"")
         }
     }
 
