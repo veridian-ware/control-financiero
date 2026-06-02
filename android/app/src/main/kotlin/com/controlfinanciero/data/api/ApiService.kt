@@ -48,6 +48,9 @@ interface ApiService {
     @DELETE("api/transactions/{id}")
     suspend fun deleteTransaction(@Path("id") id: Long): ApiResponse<String>
 
+    @POST("api/transactions/import")
+    suspend fun importCsv(@Body request: ImportCsvRequest): ApiResponse<ImportResult>
+
     // Dashboard
     @GET("api/dashboard")
     suspend fun getDashboard(): ApiResponse<Dashboard>

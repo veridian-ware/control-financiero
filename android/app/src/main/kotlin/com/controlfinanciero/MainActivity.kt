@@ -246,7 +246,8 @@ private fun AppNavigation(
                 SettingsScreen(
                     user = user,
                     onBack = { navController.popBackStack() },
-                    onSaveName = onEditProfile
+                    onSaveName = onEditProfile,
+                    onImportCsv = viewModel::importCsv
                 )
             }
             composable("premium") {

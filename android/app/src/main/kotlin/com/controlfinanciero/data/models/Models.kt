@@ -75,6 +75,21 @@ data class SyncResult(
     val errors: Int
 )
 
+/** Importación del CSV de "dinero en cuenta" de Mercado Pago. */
+@Serializable
+data class ImportCsvRequest(
+    val csv: String,
+    val accountId: Int? = null,
+    val onlyPurchases: Boolean = true
+)
+
+@Serializable
+data class ImportResult(
+    val imported: Int,
+    val skipped: Int,
+    val errors: Int
+)
+
 // --- Autenticación ---
 
 @Serializable

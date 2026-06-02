@@ -2,9 +2,12 @@ package com.controlfinanciero.routes
 
 import com.controlfinanciero.models.dto.ApiResponse
 import com.controlfinanciero.models.dto.CreateTransactionRequest
+import com.controlfinanciero.models.dto.ImportCsvRequest
+import com.controlfinanciero.models.dto.ImportResult
 import com.controlfinanciero.plugins.userId
 import com.controlfinanciero.repositories.HouseholdRepository
 import com.controlfinanciero.repositories.TransactionRepository
+import com.controlfinanciero.services.MpCsvImporter
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -14,6 +17,7 @@ import java.time.LocalDateTime
 fun Route.transactionRoutes() {
     val repository = TransactionRepository()
     val households = HouseholdRepository()
+    val csvImporter = MpCsvImporter()
 
     route("/api/transactions") {
         get {
@@ -43,6 +47,20 @@ fun Route.transactionRoutes() {
             require(request.amount > 0) { "El monto debe ser mayor a 0" }
             val created = repository.create(call.userId(), request)
             call.respond(HttpStatusCode.Created, ApiResponse(true, data = created))
+        }
+
+        post("/import") {
+            val request = call.receive<ImportCsvRequest>()
+            require(request.csv.isNotBlank()) { "El CSV está vacío" }
+            val result = csvImporter.import(
+                userId = call.userId(),
+                csv = request.csv,
+                accountId = request.accountId,
+                onlyPurchases = request.onlyPurchases
+            )
+            call.respond(
+                ApiResponse(true, data = ImportResult(result.imported, result.skipped, result.errors))
+            )
         }
 
         delete("/{id}") {
