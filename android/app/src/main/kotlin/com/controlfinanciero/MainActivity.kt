@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PieChart
@@ -56,6 +57,7 @@ import com.controlfinanciero.ui.screens.HouseholdScreen
 import com.controlfinanciero.ui.screens.InvestmentsScreen
 import com.controlfinanciero.ui.screens.PremiumScreen
 import com.controlfinanciero.ui.screens.RecurringScreen
+import com.controlfinanciero.ui.screens.ReportsScreen
 import com.controlfinanciero.ui.screens.SettingsScreen
 import com.controlfinanciero.ui.theme.ControlFinancieroTheme
 import com.controlfinanciero.ui.viewmodels.AccountViewModel
@@ -113,6 +115,7 @@ private fun AppNavigation(
     val dashboard by viewModel.dashboard.collectAsState()
     val categories by viewModel.categories.collectAsState()
     val accounts by viewModel.accounts.collectAsState()
+    val monthlyReport by viewModel.monthlyReport.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
 
@@ -232,6 +235,13 @@ private fun AppNavigation(
                     onBack = { navController.popBackStack() }
                 )
             }
+            composable("reports") {
+                ReportsScreen(
+                    monthlyReport = monthlyReport,
+                    dashboard = dashboard,
+                    onBack = { navController.popBackStack() }
+                )
+            }
             composable("settings") {
                 SettingsScreen(
                     user = user,
@@ -276,6 +286,7 @@ private fun AppDrawer(
         DrawerItem("Inversiones", Icons.Default.TrendingUp, currentRoute == "investments") { onNavigate("investments") }
         DrawerItem("Cuentas", Icons.Default.AccountBalanceWallet, currentRoute == "accounts") { onNavigate("accounts") }
         DrawerItem("Presupuestos", Icons.Default.PieChart, currentRoute == "budgets") { onNavigate("budgets") }
+        DrawerItem("Reportes", Icons.Default.BarChart, currentRoute == "reports") { onNavigate("reports") }
         DrawerItem("Configuración", Icons.Default.Settings, currentRoute == "settings") { onNavigate("settings") }
         DrawerItem("Mejorar plan", Icons.Default.WorkspacePremium, currentRoute == "premium") { onNavigate("premium") }
         Spacer(Modifier.weight(1f))
