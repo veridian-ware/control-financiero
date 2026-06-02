@@ -62,5 +62,25 @@ class RecurringViewModel : ViewModel() {
         }
     }
 
+    fun pay(occurrenceId: Long) {
+        viewModelScope.launch {
+            try {
+                if (api.payOccurrence(occurrenceId).success) load()
+            } catch (e: Exception) {
+                _error.value = "Error: ${e.message}"
+            }
+        }
+    }
+
+    fun unpay(occurrenceId: Long) {
+        viewModelScope.launch {
+            try {
+                if (api.unpayOccurrence(occurrenceId).success) load()
+            } catch (e: Exception) {
+                _error.value = "Error: ${e.message}"
+            }
+        }
+    }
+
     fun clearError() { _error.value = null }
 }

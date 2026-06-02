@@ -61,14 +61,26 @@ data class MonthlyReport(
 
 @Serializable
 data class RecurringTransactionDTO(
-    val id: Int? = null,
+    val id: Int,
     val amount: Double,
     val description: String,
     val type: String, // "ingreso" o "egreso"
     val categoryId: Int,
     val categoryName: String? = null,
-    val dayOfMonth: Int, // 1..28
-    val active: Boolean = true
+    val frequency: String, // "semanal" | "quincenal" | "mensual"
+    val anchorDate: String, // yyyy-MM-dd
+    val active: Boolean = true,
+    val occurrences: List<RecurringOccurrenceDTO> = emptyList()
+)
+
+@Serializable
+data class RecurringOccurrenceDTO(
+    val id: Long,
+    val recurringId: Int,
+    val dueDate: String, // yyyy-MM-dd
+    val amount: Double,
+    val status: String, // "pendiente" | "pagado"
+    val transactionId: Long? = null
 )
 
 @Serializable
@@ -77,7 +89,8 @@ data class CreateRecurringRequest(
     val description: String,
     val type: String,
     val categoryId: Int,
-    val dayOfMonth: Int
+    val frequency: String, // "semanal" | "quincenal" | "mensual"
+    val anchorDate: String // yyyy-MM-dd
 )
 
 @Serializable

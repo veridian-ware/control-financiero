@@ -67,9 +67,9 @@ curl -X POST http://localhost:8080/api/categories/seed
   `Application.module()` inicializa DB y plugins en orden:
   `DatabaseFactory.init` → Serialization → CORS → **Security (JWT)** → StatusPages → Routing.
 - `database/DatabaseFactory.kt` — HikariCP + Exposed, lee config de `application.conf`.
-- `models/db/Tables.kt` — tablas Exposed (`Households`, `Users`, `Categories`, `Transactions`, `RecurringTransactions`). `Users` tiene `household_id` nullable; `Categories`/`Transactions`/`RecurringTransactions` tienen `user_id`.
+- `models/db/Tables.kt` — tablas Exposed (`Households`, `Users`, `Categories`, `Transactions`, `RecurringTransactions`, `RecurringOccurrences`). `Users` tiene `household_id` nullable; `Categories`/`Transactions`/`RecurringTransactions` tienen `user_id`. `RecurringOccurrences` son los vencimientos (pendiente/pagado) de cada fijo.
 - `models/dto/DTOs.kt` + `AuthDTOs.kt` — DTOs serializables de la API.
-- `repositories/` — `UserRepository`, `CategoryRepository`, `TransactionRepository`, `RecurringTransactionRepository`, `HouseholdRepository`. Las escrituras filtran por `userId`; las lecturas de transacciones usan el **alcance del hogar** (`HouseholdRepository.memberIds`). `RecurringTransactionRepository.materializeDue` genera las transacciones fijas del mes de forma idempotente.
+- `repositories/` — `UserRepository`, `CategoryRepository`, `TransactionRepository`, `RecurringTransactionRepository`, `HouseholdRepository`. Las escrituras filtran por `userId`; las lecturas de transacciones usan el **alcance del hogar** (`HouseholdRepository.memberIds`). `RecurringTransactionRepository` genera los vencimientos del mes por frecuencia (idempotente); al marcar un vencimiento `pagado` crea la `Transaction` real, y al volverlo a `pendiente` la borra.
 - `routes/` — endpoints REST. Se registran en `plugins/Routing.kt`: `authRoutes` es público, el resto va bajo `authenticate(JWT_AUTH)`.
 - `services/MercadoPagoService.kt` — cliente Ktor hacia la API de Mercado Pago.
 - `plugins/Security.kt` — JWT HMAC256: `configureSecurity()`, `generateJwtToken()`, `ApplicationCall.userId()` (extrae el userId del token).
@@ -82,7 +82,7 @@ curl -X POST http://localhost:8080/api/categories/seed
 - `data/api/RetrofitClient.kt` — singleton Retrofit; interceptor agrega `Bearer` y, ante 401, fuerza logout.
 - `data/auth/` — `SessionManager` (DataStore) + `AuthTokenProvider` (token en memoria que lee el interceptor).
 - `data/models/Models.kt` — modelos compartidos + `ApiResponse<T>` wrapper.
-- `ui/screens/` — `DashboardScreen`, `AddTransactionScreen`, `AuthScreen`, `RecurringScreen` (fijos mensuales), `HouseholdScreen` (hogar compartido). El dashboard abre las dos últimas desde su barra superior.
+- `ui/screens/` — `DashboardScreen`, `AddTransactionScreen`, `AuthScreen`, `RecurringScreen` (fijos con frecuencia + vencimientos pendiente/pagado), `HouseholdScreen` (hogar compartido). El dashboard abre las dos últimas desde su barra superior.
 - `ui/viewmodels/` — `DashboardViewModel`, `AuthViewModel` (login/registro/logout), `RecurringViewModel`, `HouseholdViewModel`.
 - `ui/theme/Theme.kt` — Material3.
 
@@ -104,13 +104,14 @@ Todas las rutas excepto `register`/`login` requieren `Authorization: Bearer <tok
 | GET    | `/api/transactions`               | Listar (filtros `type,categoryId,from,to,limit,offset`) |
 | POST   | `/api/transactions`               | Crear transacción manual                      |
 | DELETE | `/api/transactions/{id}`          | Eliminar transacción                          |
-| GET    | `/api/dashboard`                  | Dashboard del mes actual (materializa recurrentes vencidas) |
+| GET    | `/api/dashboard`                  | Dashboard del mes actual (genera los vencimientos del mes) |
 | GET    | `/api/dashboard/monthly/{year}`   | Reporte mensual del año                       |
 | POST   | `/api/mercadopago/sync`           | Sincronizar pagos (filtros `from,to,categoryId`) |
-| GET    | `/api/recurring`                  | Listar ingresos/egresos fijos                 |
-| POST   | `/api/recurring`                  | Crear fijo mensual (`amount,description,type,categoryId,dayOfMonth`) |
-| POST   | `/api/recurring/run`              | Materializar ahora las recurrencias vencidas del mes |
-| DELETE | `/api/recurring/{id}`             | Eliminar recurrencia                          |
+| GET    | `/api/recurring`                  | Listar fijos con sus vencimientos del mes (pendiente/pagado) |
+| POST   | `/api/recurring`                  | Crear fijo (`amount,description,type,categoryId,frequency,anchorDate`) |
+| POST   | `/api/recurring/occurrences/{id}/pay`   | Marcar vencimiento pagado (crea la transacción) |
+| POST   | `/api/recurring/occurrences/{id}/unpay` | Volver vencimiento a pendiente (borra la transacción) |
+| DELETE | `/api/recurring/{id}`             | Eliminar fijo                                 |
 | GET    | `/api/household`                  | Hogar actual del usuario (miembros + código)  |
 | POST   | `/api/household`                  | Crear hogar → genera `inviteCode`             |
 | POST   | `/api/household/join`             | Unirse a un hogar por `inviteCode`            |
@@ -160,7 +161,8 @@ Generar un secret fuerte (≥ 32 chars): `openssl rand -base64 48`. En prod, set
 - ✅ Resuelto (2026-05-30): bug **preexistente** en `Tables.kt` — la columna se llamaba `source`, que choca con `ColumnSet.source` de Exposed 0.57 y hacía que el backend **no compilara**. Propiedad renombrada a `sourceCol` (la columna en la DB sigue siendo `"source"`). ⚠️ Gotcha al agregar columnas Exposed: evitar nombres que existan en `ColumnSet`/`Table`.
 - ✅ Resuelto (2026-05-30): OOM de R8/D8 en CI → `org.gradle.jvmargs=-Xmx4g` en `android/gradle.properties`.
 - ✅ Resuelto (2026-05-31): guard de `JWT_SECRET` — con `APP_ENV≠development` el backend hace fail-fast si sigue el secret por defecto; en dev solo advierte (`plugins/Security.kt`).
-- ✅ Agregado (2026-05-31): **ingresos/egresos recurrentes** (`recurring_transactions`). Reemplazo práctico de "integrar Brubank": el sueldo se define una vez y se materializa solo cada mes al abrir el dashboard. Brubank no tiene API pública oficial.
+- ✅ Agregado (2026-05-31): **ingresos/egresos recurrentes** (`recurring_transactions`). Reemplazo práctico de "integrar Brubank" (que no tiene API pública oficial).
+- ✅ Rediseñado (2026-06-02): los fijos ahora tienen **frecuencia** (`semanal`/`quincenal`/`mensual`) y generan **vencimientos** (`recurring_occurrences`) con estado **pendiente/pagado**. Ya **no se auto-materializan**: el dashboard solo cuenta lo marcado como pagado (marcar pagado crea la `Transaction`; despagar la borra). Se eliminaron `POST /api/recurring/run` y `materializeDue`. ⚠️ La generación es del **mes en curso** (meses no abiertos no generan ocurrencias). ⚠️ Gotcha: `recurring_occurrences.transaction_id` tiene FK a `transactions`, así que al despagar hay que **soltar la FK (set null) antes** de borrar la transacción. Y el `from` del dashboard ahora trunca a medianoche (arrastraba nanosegundos y no contaba transacciones fechadas a las 00:00).
 - ✅ Agregado (2026-05-31): **hogar compartido** — dos personas (ej: pareja) comparten ingresos y gastos. Modelo elegido: visibilidad compartida vía `households` + `users.household_id`; cada transacción mantiene su dueño. ⚠️ Limitaciones MVP a evaluar: el dashboard agrupa "por categoría" por `categoryId`, así que categorías homónimas de distintos usuarios aparecen separadas; `getById`/`delete` siguen restringidos al dueño.
 - ✅ Agregado (2026-05-31): **product flavors `emulator`/`device`** (dimensión `target`) para correr en celular físico sin editar la URL cada vez. `device` lee la IP de la PC de `local.properties` (`device.api.host`, gitignored) con fallback. ⚠️ Gotchas: la IP de DHCP puede cambiar (actualizar `device.api.host`); el celu necesita mismo Wi-Fi + puerto 8080 abierto en el firewall; el CI ahora compila ambos flavors en `assembleDebug` (el flavor `device` usa el fallback porque no hay `local.properties` en CI).
 - Roadmap (del README): auth JWT, gráficos Vico en la app, historial con filtros,

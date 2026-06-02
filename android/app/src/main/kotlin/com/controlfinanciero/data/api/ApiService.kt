@@ -70,8 +70,11 @@ interface ApiService {
     @POST("api/recurring")
     suspend fun createRecurring(@Body request: CreateRecurringRequest): ApiResponse<RecurringTransaction>
 
-    @POST("api/recurring/run")
-    suspend fun runRecurring(): ApiResponse<Int>
+    @POST("api/recurring/occurrences/{id}/pay")
+    suspend fun payOccurrence(@Path("id") id: Long): ApiResponse<String>
+
+    @POST("api/recurring/occurrences/{id}/unpay")
+    suspend fun unpayOccurrence(@Path("id") id: Long): ApiResponse<String>
 
     @DELETE("api/recurring/{id}")
     suspend fun deleteRecurring(@Path("id") id: Int): ApiResponse<String>
