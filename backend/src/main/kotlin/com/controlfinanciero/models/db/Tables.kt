@@ -86,3 +86,18 @@ object RecurringOccurrences : Table("recurring_occurrences") {
     override val primaryKey = PrimaryKey(id)
     init { uniqueIndex(recurringId, dueDate) }
 }
+
+// Inversión del usuario, carga manual (sin datos de mercado en vivo). El rendimiento se
+// calcula como (current_value - amount_invested); el usuario actualiza current_value a mano.
+object Investments : Table("investments") {
+    val id = integer("id").autoIncrement()
+    val userId = integer("user_id").references(Users.id)
+    val name = varchar("name", 200)
+    val type = varchar("type", 30) // acciones | cripto | plazo_fijo | fci | dolares | otro
+    val amountInvested = decimal("amount_invested", 14, 2)
+    val currentValue = decimal("current_value", 14, 2)
+    val createdAt = datetime("created_at")
+    val updatedAt = datetime("updated_at")
+
+    override val primaryKey = PrimaryKey(id)
+}

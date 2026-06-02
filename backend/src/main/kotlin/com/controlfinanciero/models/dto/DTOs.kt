@@ -114,6 +114,42 @@ data class CreateHouseholdRequest(val name: String)
 data class JoinHouseholdRequest(val inviteCode: String)
 
 @Serializable
+data class InvestmentDTO(
+    val id: Int,
+    val name: String,
+    val type: String,
+    val amountInvested: Double,
+    val currentValue: Double,
+    val gain: Double,      // current - invertido
+    val yieldPct: Double   // gain / invertido * 100
+)
+
+@Serializable
+data class InvestmentSummaryDTO(
+    val totalInvested: Double,
+    val totalValue: Double,
+    val totalGain: Double,
+    val yieldPct: Double,
+    val investments: List<InvestmentDTO>
+)
+
+@Serializable
+data class CreateInvestmentRequest(
+    val name: String,
+    val type: String,
+    val amountInvested: Double,
+    val currentValue: Double? = null // null = igual al invertido
+)
+
+@Serializable
+data class UpdateInvestmentRequest(
+    val name: String? = null,
+    val type: String? = null,
+    val amountInvested: Double? = null,
+    val currentValue: Double? = null
+)
+
+@Serializable
 data class ApiResponse<T>(
     val success: Boolean,
     val data: T? = null,
