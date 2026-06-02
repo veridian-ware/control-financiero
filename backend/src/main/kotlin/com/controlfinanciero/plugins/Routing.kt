@@ -2,6 +2,7 @@ package com.controlfinanciero.plugins
 
 import com.controlfinanciero.routes.accountRoutes
 import com.controlfinanciero.routes.authRoutes
+import com.controlfinanciero.routes.budgetRoutes
 import com.controlfinanciero.routes.categoryRoutes
 import com.controlfinanciero.routes.dashboardRoutes
 import com.controlfinanciero.routes.financialAccountRoutes
@@ -23,6 +24,7 @@ fun Application.configureRouting() {
         authenticate(JWT_AUTH) {
             accountRoutes()
             categoryRoutes()
+            budgetRoutes()
             transactionRoutes()
             recurringRoutes()
             dashboardRoutes()

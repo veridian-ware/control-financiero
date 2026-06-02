@@ -115,3 +115,17 @@ object Investments : Table("investments") {
 
     override val primaryKey = PrimaryKey(id)
 }
+
+// Presupuesto mensual por categoría (egreso). Un presupuesto por categoría y usuario.
+// El "gastado" se calcula al vuelo desde las transacciones del mes (no se almacena).
+object Budgets : Table("budgets") {
+    val id = integer("id").autoIncrement()
+    val userId = integer("user_id").references(Users.id)
+    val categoryId = integer("category_id").references(Categories.id)
+    val monthlyLimit = decimal("monthly_limit", 14, 2)
+    val createdAt = datetime("created_at")
+    val updatedAt = datetime("updated_at")
+
+    override val primaryKey = PrimaryKey(id)
+    init { uniqueIndex(userId, categoryId) }
+}
