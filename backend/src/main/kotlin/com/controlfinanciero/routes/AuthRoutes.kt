@@ -32,7 +32,7 @@ fun Route.authRoutes(config: ApplicationConfig) {
             }
 
             val hash = BCrypt.hashpw(req.password, BCrypt.gensalt())
-            val user = users.create(email, hash)
+            val user = users.create(email, hash, req.name?.trim()?.takeIf { it.isNotBlank() })
             categories.seedDefaults(user.id) // categorías por defecto para el usuario nuevo
 
             val token = generateJwtToken(config, user.id, user.email)
@@ -63,6 +63,19 @@ fun Route.accountRoutes() {
     get("/api/auth/me") {
         val user = users.getById(call.userId())
             ?: return@get call.respond(
+                HttpStatusCode.NotFound,
+                ApiResponse<Unit>(false, message = "Usuario no encontrado")
+            )
+        call.respond(ApiResponse(true, data = user))
+    }
+
+    put("/api/auth/me") {
+        val req = call.receive<UpdateProfileRequest>()
+        val name = req.name.trim()
+        require(name.isNotEmpty() && name.length <= 100) { "Nombre inválido (1 a 100 caracteres)" }
+        users.updateName(call.userId(), name)
+        val user = users.getById(call.userId())
+            ?: return@put call.respond(
                 HttpStatusCode.NotFound,
                 ApiResponse<Unit>(false, message = "Usuario no encontrado")
             )

@@ -93,9 +93,10 @@ Todas las rutas excepto `register`/`login` requieren `Authorization: Bearer <tok
 
 | Método | Ruta                              | Descripción                                   |
 |--------|-----------------------------------|-----------------------------------------------|
-| POST   | `/api/auth/register`              | Crear cuenta → `{ token, user }` (siembra categorías) |
+| POST   | `/api/auth/register`              | Crear cuenta (`email,password,name?`) → `{ token, user }` (siembra categorías) |
 | POST   | `/api/auth/login`                 | Login → `{ token, user }`                     |
 | GET    | `/api/auth/me`                    | Usuario autenticado                           |
+| PUT    | `/api/auth/me`                    | Editar perfil (campo `name`)                  |
 | POST   | `/api/mercadopago/token`          | Guardar token MP del usuario                  |
 | GET    | `/api/categories`                 | Listar categorías (filtro `type`)             |
 | POST   | `/api/categories`                 | Crear categoría                               |
