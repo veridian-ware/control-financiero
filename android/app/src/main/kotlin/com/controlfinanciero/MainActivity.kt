@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.TrendingUp
@@ -49,6 +50,7 @@ import com.controlfinanciero.ui.components.InitialsAvatar
 import com.controlfinanciero.ui.screens.AccountsScreen
 import com.controlfinanciero.ui.screens.AddTransactionScreen
 import com.controlfinanciero.ui.screens.AuthScreen
+import com.controlfinanciero.ui.screens.BudgetsScreen
 import com.controlfinanciero.ui.screens.DashboardScreen
 import com.controlfinanciero.ui.screens.HouseholdScreen
 import com.controlfinanciero.ui.screens.InvestmentsScreen
@@ -58,6 +60,7 @@ import com.controlfinanciero.ui.screens.SettingsScreen
 import com.controlfinanciero.ui.theme.ControlFinancieroTheme
 import com.controlfinanciero.ui.viewmodels.AccountViewModel
 import com.controlfinanciero.ui.viewmodels.AuthViewModel
+import com.controlfinanciero.ui.viewmodels.BudgetViewModel
 import com.controlfinanciero.ui.viewmodels.DashboardViewModel
 import com.controlfinanciero.ui.viewmodels.HouseholdViewModel
 import com.controlfinanciero.ui.viewmodels.InvestmentViewModel
@@ -217,6 +220,18 @@ private fun AppNavigation(
                     onBack = { viewModel.loadDashboard(); navController.popBackStack() }
                 )
             }
+            composable("budgets") {
+                val budgetViewModel: BudgetViewModel = viewModel()
+                val budgets by budgetViewModel.budgets.collectAsState()
+                BudgetsScreen(
+                    budgets = budgets,
+                    categories = categories,
+                    onCreate = { budgetViewModel.create(it) },
+                    onUpdate = { id, req -> budgetViewModel.update(id, req) },
+                    onDelete = { budgetViewModel.delete(it) },
+                    onBack = { navController.popBackStack() }
+                )
+            }
             composable("settings") {
                 SettingsScreen(
                     user = user,
@@ -260,6 +275,7 @@ private fun AppDrawer(
         DrawerItem("Hogar compartido", Icons.Default.Group, currentRoute == "household") { onNavigate("household") }
         DrawerItem("Inversiones", Icons.Default.TrendingUp, currentRoute == "investments") { onNavigate("investments") }
         DrawerItem("Cuentas", Icons.Default.AccountBalanceWallet, currentRoute == "accounts") { onNavigate("accounts") }
+        DrawerItem("Presupuestos", Icons.Default.PieChart, currentRoute == "budgets") { onNavigate("budgets") }
         DrawerItem("Configuración", Icons.Default.Settings, currentRoute == "settings") { onNavigate("settings") }
         DrawerItem("Mejorar plan", Icons.Default.WorkspacePremium, currentRoute == "premium") { onNavigate("premium") }
         Spacer(Modifier.weight(1f))

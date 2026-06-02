@@ -181,6 +181,29 @@ data class UpdateAccountRequest(
 )
 
 @Serializable
+data class BudgetDTO(
+    val id: Int,
+    val categoryId: Int,
+    val categoryName: String? = null,
+    val monthlyLimit: Double,
+    val spent: Double,        // egresos de la categoría en el mes (alcance hogar)
+    val remaining: Double,    // límite − gastado
+    val percentUsed: Double,  // gastado / límite * 100
+    val exceeded: Boolean
+)
+
+@Serializable
+data class CreateBudgetRequest(
+    val categoryId: Int,
+    val monthlyLimit: Double
+)
+
+@Serializable
+data class UpdateBudgetRequest(
+    val monthlyLimit: Double
+)
+
+@Serializable
 data class ApiResponse<T>(
     val success: Boolean,
     val data: T? = null,

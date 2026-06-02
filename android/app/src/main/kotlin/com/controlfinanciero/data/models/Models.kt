@@ -240,3 +240,28 @@ data class UpdateAccountRequest(
     val type: String? = null,
     val initialBalance: Double? = null
 )
+
+// --- Presupuestos ---
+
+@Serializable
+data class Budget(
+    val id: Int,
+    val categoryId: Int,
+    val categoryName: String? = null,
+    val monthlyLimit: Double,
+    val spent: Double,
+    val remaining: Double,
+    val percentUsed: Double,
+    val exceeded: Boolean
+)
+
+@Serializable
+data class CreateBudgetRequest(
+    val categoryId: Int,
+    val monthlyLimit: Double
+)
+
+@Serializable
+data class UpdateBudgetRequest(
+    val monthlyLimit: Double
+)
