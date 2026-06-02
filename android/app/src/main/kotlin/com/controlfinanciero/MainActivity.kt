@@ -166,7 +166,9 @@ private fun AppNavigation(
                     categories = recurringCategories,
                     onAdd = { recurringViewModel.create(it) },
                     onDelete = { recurringViewModel.delete(it) },
-                    // Al volver recargamos el dashboard: pudo materializarse una transacción.
+                    onPay = { recurringViewModel.pay(it) },
+                    onUnpay = { recurringViewModel.unpay(it) },
+                    // Al volver recargamos el dashboard: marcar pagado crea transacciones.
                     onBack = { viewModel.loadDashboard(); navController.popBackStack() }
                 )
             }

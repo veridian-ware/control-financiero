@@ -7,20 +7,35 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.controlfinanciero.data.models.Category
 import com.controlfinanciero.data.models.CreateRecurringRequest
+import com.controlfinanciero.data.models.RecurringOccurrence
 import com.controlfinanciero.data.models.RecurringTransaction
 import java.text.NumberFormat
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
 import java.util.Locale
+
+private val frequencies = listOf("semanal" to "Semanal", "quincenal" to "Quincenal", "mensual" to "Mensual")
+
+private fun frequencyLabel(f: String) = frequencies.firstOrNull { it.first == f }?.second ?: f
+
+/** "2026-06-01" -> "01/06". */
+private fun shortDate(iso: String): String =
+    if (iso.length >= 10) "${iso.substring(8, 10)}/${iso.substring(5, 7)}" else iso
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,6 +44,8 @@ fun RecurringScreen(
     categories: List<Category>,
     onAdd: (CreateRecurringRequest) -> Unit,
     onDelete: (Int) -> Unit,
+    onPay: (Long) -> Unit,
+    onUnpay: (Long) -> Unit,
     onBack: () -> Unit
 ) {
     val currencyFormat = remember { NumberFormat.getCurrencyInstance(Locale("es", "AR")) }
@@ -47,14 +64,15 @@ fun RecurringScreen(
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Agregar recurrente")
+                Icon(Icons.Default.Add, contentDescription = "Agregar fijo")
             }
         }
     ) { padding ->
         if (recurrences.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Text(
-                    "Definí un ingreso o gasto fijo (ej: tus haberes el día 1) y se registra solo cada mes.",
+                    "Definí un ingreso o gasto fijo (semanal, quincenal o mensual) y marcá cada " +
+                        "vencimiento como pagado cuando lo abones.",
                     Modifier.padding(32.dp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -66,7 +84,7 @@ fun RecurringScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(recurrences) { item ->
-                    RecurringItem(item, currencyFormat, onDelete)
+                    FixedCard(item, currencyFormat, onDelete, onPay, onUnpay)
                 }
             }
         }
@@ -82,36 +100,80 @@ fun RecurringScreen(
 }
 
 @Composable
-private fun RecurringItem(
+private fun FixedCard(
     item: RecurringTransaction,
     format: NumberFormat,
-    onDelete: (Int) -> Unit
+    onDelete: (Int) -> Unit,
+    onPay: (Long) -> Unit,
+    onUnpay: (Long) -> Unit
 ) {
     Card(Modifier.fillMaxWidth()) {
-        Row(
-            Modifier.padding(12.dp).fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(item.description, fontWeight = FontWeight.Medium)
+        Column(Modifier.padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(item.description, fontWeight = FontWeight.Medium)
+                    Text(
+                        "${item.categoryName ?: "Sin categoría"} · ${frequencyLabel(item.frequency)}",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 Text(
-                    "${item.categoryName ?: "Sin categoría"} · día ${item.dayOfMonth}",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    "${if (item.type == "ingreso") "+" else "-"}${format.format(item.amount)}",
+                    fontWeight = FontWeight.Bold,
+                    color = if (item.type == "ingreso") MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.error
                 )
-            }
-            Text(
-                "${if (item.type == "ingreso") "+" else "-"}${format.format(item.amount)}",
-                fontWeight = FontWeight.Bold,
-                color = if (item.type == "ingreso") MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.error
-            )
-            item.id?.let { id ->
-                IconButton(onClick = { onDelete(id) }) {
+                IconButton(onClick = { onDelete(item.id) }) {
                     Icon(Icons.Default.Delete, contentDescription = "Eliminar")
                 }
             }
+
+            if (item.occurrences.isNotEmpty()) {
+                Spacer(Modifier.height(4.dp))
+                HorizontalDivider()
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Vencimientos del mes",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                item.occurrences.forEach { occ ->
+                    OccurrenceRow(occ, format, onPay, onUnpay)
+                }
+            }
         }
+    }
+}
+
+@Composable
+private fun OccurrenceRow(
+    occ: RecurringOccurrence,
+    format: NumberFormat,
+    onPay: (Long) -> Unit,
+    onUnpay: (Long) -> Unit
+) {
+    val paid = occ.status == "pagado"
+    Row(
+        Modifier.fillMaxWidth().padding(vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(onClick = { if (paid) onUnpay(occ.id) else onPay(occ.id) }) {
+            Icon(
+                if (paid) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                contentDescription = if (paid) "Marcar pendiente" else "Marcar pagado",
+                tint = if (paid) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Column(Modifier.weight(1f)) {
+            Text("Vence ${shortDate(occ.dueDate)}", fontSize = 14.sp)
+            Text(
+                if (paid) "Pagado" else "Pendiente",
+                fontSize = 11.sp,
+                color = if (paid) Color(0xFF2E7D32) else Color(0xFFEF6C00)
+            )
+        }
+        Text(format.format(occ.amount), fontSize = 14.sp, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -125,20 +187,23 @@ private fun AddRecurringDialog(
     var selectedType by remember { mutableStateOf("ingreso") }
     var amount by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var day by remember { mutableStateOf("1") }
+    var frequency by remember { mutableStateOf("mensual") }
     var selectedCategory by remember { mutableStateOf<Category?>(null) }
     var showCategoryDropdown by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var anchorMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
+    val anchorDate = remember(anchorMillis) {
+        Instant.ofEpochMilli(anchorMillis).atZone(ZoneOffset.UTC).toLocalDate()
+    }
     val filteredCategories = categories.filter { it.type == selectedType }
-    val dayInt = day.toIntOrNull()
     val valid = amount.toDoubleOrNull()?.let { it > 0 } == true &&
-            description.isNotBlank() &&
-            selectedCategory != null &&
-            dayInt != null && dayInt in 1..28
+        description.isNotBlank() &&
+        selectedCategory != null
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nuevo fijo mensual") },
+        title = { Text("Nuevo ingreso / gasto fijo") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -169,7 +234,7 @@ private fun AddRecurringDialog(
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("Descripción (ej: Haberes)") },
+                    label = { Text("Descripción (ej: Alquiler)") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -199,13 +264,27 @@ private fun AddRecurringDialog(
                     }
                 }
 
+                Text("Frecuencia", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    frequencies.forEach { (value, label) ->
+                        FilterChip(
+                            selected = frequency == value,
+                            onClick = { frequency = value },
+                            label = { Text(label, fontSize = 12.sp) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+
                 OutlinedTextField(
-                    value = day,
-                    onValueChange = { day = it.filter { c -> c.isDigit() }.take(2) },
-                    label = { Text("Día del mes (1-28)") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    value = anchorDate.toString(),
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Primer vencimiento") },
+                    trailingIcon = {
+                        TextButton(onClick = { showDatePicker = true }) { Text("Elegir") }
+                    },
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         },
@@ -219,7 +298,8 @@ private fun AddRecurringDialog(
                             description = description,
                             type = selectedType,
                             categoryId = selectedCategory!!.id!!,
-                            dayOfMonth = dayInt!!
+                            frequency = frequency,
+                            anchorDate = anchorDate.toString()
                         )
                     )
                 }
@@ -227,4 +307,20 @@ private fun AddRecurringDialog(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
     )
+
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = anchorMillis)
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { anchorMillis = it }
+                    showDatePicker = false
+                }) { Text("OK") }
+            },
+            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") } }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 }
