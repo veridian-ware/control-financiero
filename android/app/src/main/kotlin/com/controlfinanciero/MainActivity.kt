@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Repeat
@@ -45,6 +46,7 @@ import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import com.controlfinanciero.data.models.User
 import com.controlfinanciero.ui.components.InitialsAvatar
+import com.controlfinanciero.ui.screens.AccountsScreen
 import com.controlfinanciero.ui.screens.AddTransactionScreen
 import com.controlfinanciero.ui.screens.AuthScreen
 import com.controlfinanciero.ui.screens.DashboardScreen
@@ -54,6 +56,7 @@ import com.controlfinanciero.ui.screens.PremiumScreen
 import com.controlfinanciero.ui.screens.RecurringScreen
 import com.controlfinanciero.ui.screens.SettingsScreen
 import com.controlfinanciero.ui.theme.ControlFinancieroTheme
+import com.controlfinanciero.ui.viewmodels.AccountViewModel
 import com.controlfinanciero.ui.viewmodels.AuthViewModel
 import com.controlfinanciero.ui.viewmodels.DashboardViewModel
 import com.controlfinanciero.ui.viewmodels.HouseholdViewModel
@@ -106,6 +109,7 @@ private fun AppNavigation(
 
     val dashboard by viewModel.dashboard.collectAsState()
     val categories by viewModel.categories.collectAsState()
+    val accounts by viewModel.accounts.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
 
@@ -152,6 +156,7 @@ private fun AppNavigation(
             composable("add_transaction") {
                 AddTransactionScreen(
                     categories = categories,
+                    accounts = accounts,
                     onSave = { request ->
                         viewModel.createTransaction(request) {
                             navController.popBackStack()
@@ -200,6 +205,18 @@ private fun AppNavigation(
                     onBack = { navController.popBackStack() }
                 )
             }
+            composable("accounts") {
+                val accountViewModel: AccountViewModel = viewModel()
+                val accountSummary by accountViewModel.summary.collectAsState()
+                AccountsScreen(
+                    summary = accountSummary,
+                    onCreate = { accountViewModel.create(it) },
+                    onUpdate = { id, req -> accountViewModel.update(id, req) },
+                    onDelete = { accountViewModel.delete(it) },
+                    // Al volver recargamos el dashboard: refresca la lista de cuentas del alta.
+                    onBack = { viewModel.loadDashboard(); navController.popBackStack() }
+                )
+            }
             composable("settings") {
                 SettingsScreen(
                     user = user,
@@ -242,6 +259,7 @@ private fun AppDrawer(
         DrawerItem("Ingresos/gastos fijos", Icons.Default.Repeat, currentRoute == "recurring") { onNavigate("recurring") }
         DrawerItem("Hogar compartido", Icons.Default.Group, currentRoute == "household") { onNavigate("household") }
         DrawerItem("Inversiones", Icons.Default.TrendingUp, currentRoute == "investments") { onNavigate("investments") }
+        DrawerItem("Cuentas", Icons.Default.AccountBalanceWallet, currentRoute == "accounts") { onNavigate("accounts") }
         DrawerItem("Configuración", Icons.Default.Settings, currentRoute == "settings") { onNavigate("settings") }
         DrawerItem("Mejorar plan", Icons.Default.WorkspacePremium, currentRoute == "premium") { onNavigate("premium") }
         Spacer(Modifier.weight(1f))

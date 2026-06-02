@@ -104,4 +104,17 @@ interface ApiService {
 
     @DELETE("api/investments/{id}")
     suspend fun deleteInvestment(@Path("id") id: Int): ApiResponse<String>
+
+    // Cuentas
+    @GET("api/accounts")
+    suspend fun getAccounts(): ApiResponse<AccountSummary>
+
+    @POST("api/accounts")
+    suspend fun createAccount(@Body request: CreateAccountRequest): ApiResponse<Account>
+
+    @PUT("api/accounts/{id}")
+    suspend fun updateAccount(@Path("id") id: Int, @Body request: UpdateAccountRequest): ApiResponse<String>
+
+    @DELETE("api/accounts/{id}")
+    suspend fun deleteAccount(@Path("id") id: Int): ApiResponse<String>
 }

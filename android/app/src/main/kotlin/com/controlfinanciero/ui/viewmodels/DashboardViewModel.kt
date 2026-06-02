@@ -22,6 +22,9 @@ class DashboardViewModel : ViewModel() {
     private val _categories = MutableStateFlow<List<Category>>(emptyList())
     val categories: StateFlow<List<Category>> = _categories
 
+    private val _accounts = MutableStateFlow<List<Account>>(emptyList())
+    val accounts: StateFlow<List<Account>> = _accounts
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
@@ -45,6 +48,9 @@ class DashboardViewModel : ViewModel() {
 
                 val catResponse = api.getCategories()
                 if (catResponse.success) _categories.value = catResponse.data ?: emptyList()
+
+                val accountsResponse = api.getAccounts()
+                if (accountsResponse.success) _accounts.value = accountsResponse.data?.accounts ?: emptyList()
             } catch (e: Exception) {
                 _error.value = "Error de conexión: ${e.message}"
             } finally {

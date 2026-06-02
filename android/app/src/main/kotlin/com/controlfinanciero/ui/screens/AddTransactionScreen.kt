@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.controlfinanciero.data.models.Account
 import com.controlfinanciero.data.models.Category
 import com.controlfinanciero.data.models.CreateTransactionRequest
 
@@ -16,6 +17,7 @@ import com.controlfinanciero.data.models.CreateTransactionRequest
 @Composable
 fun AddTransactionScreen(
     categories: List<Category>,
+    accounts: List<Account>,
     onSave: (CreateTransactionRequest) -> Unit,
     onBack: () -> Unit
 ) {
@@ -24,6 +26,8 @@ fun AddTransactionScreen(
     var selectedType by remember { mutableStateOf("egreso") }
     var selectedCategory by remember { mutableStateOf<Category?>(null) }
     var showCategoryDropdown by remember { mutableStateOf(false) }
+    var selectedAccount by remember { mutableStateOf<Account?>(null) }
+    var showAccountDropdown by remember { mutableStateOf(false) }
 
     val filteredCategories = categories.filter { it.type == selectedType }
 
@@ -108,6 +112,38 @@ fun AddTransactionScreen(
                 }
             }
 
+            // Cuenta (opcional)
+            if (accounts.isNotEmpty()) {
+                ExposedDropdownMenuBox(
+                    expanded = showAccountDropdown,
+                    onExpandedChange = { showAccountDropdown = it }
+                ) {
+                    OutlinedTextField(
+                        value = selectedAccount?.name ?: "Sin cuenta",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Cuenta (opcional)") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showAccountDropdown) },
+                        modifier = Modifier.fillMaxWidth().menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = showAccountDropdown,
+                        onDismissRequest = { showAccountDropdown = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Sin cuenta") },
+                            onClick = { selectedAccount = null; showAccountDropdown = false }
+                        )
+                        accounts.forEach { acc ->
+                            DropdownMenuItem(
+                                text = { Text(acc.name) },
+                                onClick = { selectedAccount = acc; showAccountDropdown = false }
+                            )
+                        }
+                    }
+                }
+            }
+
             Spacer(Modifier.weight(1f))
 
             // Guardar
@@ -122,7 +158,8 @@ fun AddTransactionScreen(
                             amount = amt,
                             description = description,
                             type = selectedType,
-                            categoryId = cat.id!!
+                            categoryId = cat.id!!,
+                            accountId = selectedAccount?.id
                         )
                     )
                 },

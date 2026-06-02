@@ -28,7 +28,8 @@ data class Transaction(
     val categoryName: String? = null,
     val date: String,
     val source: String = "manual",
-    val externalId: String? = null
+    val externalId: String? = null,
+    val accountId: Int? = null
 )
 
 @Serializable
@@ -37,7 +38,8 @@ data class CreateTransactionRequest(
     val description: String,
     val type: String,
     val categoryId: Int,
-    val date: String? = null
+    val date: String? = null,
+    val accountId: Int? = null
 )
 
 @Serializable
@@ -206,4 +208,35 @@ data class UpdateInvestmentRequest(
     val type: String? = null,
     val amountInvested: Double? = null,
     val currentValue: Double? = null
+)
+
+// --- Cuentas ---
+
+@Serializable
+data class Account(
+    val id: Int,
+    val name: String,
+    val type: String,
+    val initialBalance: Double,
+    val balance: Double
+)
+
+@Serializable
+data class AccountSummary(
+    val totalBalance: Double,
+    val accounts: List<Account>
+)
+
+@Serializable
+data class CreateAccountRequest(
+    val name: String,
+    val type: String,
+    val initialBalance: Double = 0.0
+)
+
+@Serializable
+data class UpdateAccountRequest(
+    val name: String? = null,
+    val type: String? = null,
+    val initialBalance: Double? = null
 )

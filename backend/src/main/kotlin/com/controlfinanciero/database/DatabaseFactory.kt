@@ -1,5 +1,6 @@
 package com.controlfinanciero.database
 
+import com.controlfinanciero.models.db.Accounts
 import com.controlfinanciero.models.db.Categories
 import com.controlfinanciero.models.db.Households
 import com.controlfinanciero.models.db.Investments
@@ -43,7 +44,8 @@ object DatabaseFactory {
             // createMissingTablesAndColumns agrega tablas/columnas nuevas a una DB ya existente
             // (ej: users.household_id, recurring_transactions).
             SchemaUtils.createMissingTablesAndColumns(
-                Households, Users, Categories, Transactions, RecurringTransactions, RecurringOccurrences, Investments
+                Households, Users, Accounts, Categories, Transactions,
+                RecurringTransactions, RecurringOccurrences, Investments
             )
         }
     }
