@@ -23,6 +23,7 @@ import com.controlfinanciero.data.models.Category
 import com.controlfinanciero.data.models.CreateRecurringRequest
 import com.controlfinanciero.data.models.RecurringOccurrence
 import com.controlfinanciero.data.models.RecurringTransaction
+import com.controlfinanciero.ui.theme.FinanceColors
 import java.text.NumberFormat
 import java.time.Instant
 import java.time.LocalDate
@@ -121,8 +122,8 @@ private fun FixedCard(
                 Text(
                     "${if (item.type == "ingreso") "+" else "-"}${format.format(item.amount)}",
                     fontWeight = FontWeight.Bold,
-                    color = if (item.type == "ingreso") MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.error
+                    color = if (item.type == "ingreso") FinanceColors.Income
+                    else FinanceColors.Expense
                 )
                 IconButton(onClick = { onDelete(item.id) }) {
                     Icon(Icons.Default.Delete, contentDescription = "Eliminar")
@@ -162,7 +163,7 @@ private fun OccurrenceRow(
             Icon(
                 if (paid) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
                 contentDescription = if (paid) "Marcar pendiente" else "Marcar pagado",
-                tint = if (paid) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurfaceVariant
+                tint = if (paid) FinanceColors.Income else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Column(Modifier.weight(1f)) {
@@ -170,7 +171,7 @@ private fun OccurrenceRow(
             Text(
                 if (paid) "Pagado" else "Pendiente",
                 fontSize = 11.sp,
-                color = if (paid) Color(0xFF2E7D32) else Color(0xFFEF6C00)
+                color = if (paid) FinanceColors.Income else FinanceColors.Warning
             )
         }
         Text(format.format(occ.amount), fontSize = 14.sp, fontWeight = FontWeight.Medium)

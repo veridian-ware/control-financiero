@@ -84,7 +84,8 @@ curl -X POST http://localhost:8080/api/categories/seed
 - `data/models/Models.kt` — modelos compartidos + `ApiResponse<T>` wrapper.
 - `ui/screens/` — `DashboardScreen`, `AddTransactionScreen`, `AuthScreen`, `RecurringScreen` (fijos con frecuencia + vencimientos pendiente/pagado), `HouseholdScreen` (hogar compartido), `InvestmentsScreen` (inversiones), `AccountsScreen` (cuentas/billeteras), `BudgetsScreen` (presupuestos), `ReportsScreen` (gráficos Vico), `SettingsScreen` (perfil), `PremiumScreen` (placeholder). Se navegan desde el **menú lateral** (`ModalNavigationDrawer`); el dashboard tiene la hamburguesa que lo abre. Avatar de iniciales en `ui/components/UserAvatar.kt`.
 - `ui/viewmodels/` — `DashboardViewModel`, `AuthViewModel` (login/registro/logout/perfil), `RecurringViewModel`, `HouseholdViewModel`, `InvestmentViewModel`, `AccountViewModel`, `BudgetViewModel`.
-- `ui/theme/Theme.kt` — Material3.
+- `ui/theme/Theme.kt` — Material3 **dark-first** (paleta de marca violeta-forward: primary `#9B30F5`, secondary azul, tertiary magenta; fondo/superficie oscuros). **Dynamic color desactivado** (para que mande la marca). Esquema claro disponible para un toggle futuro.
+- `ui/theme/FinanceColors.kt` — colores **semánticos** fijos: `Income` (verde), `Expense` (rojo), `Warning` (naranja). Usar en vez de hardcodear verdes/rojos en las pantallas.
 
 ## API REST
 

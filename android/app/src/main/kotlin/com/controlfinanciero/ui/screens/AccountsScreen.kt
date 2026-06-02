@@ -22,6 +22,7 @@ import com.controlfinanciero.data.models.Account
 import com.controlfinanciero.data.models.AccountSummary
 import com.controlfinanciero.data.models.CreateAccountRequest
 import com.controlfinanciero.data.models.UpdateAccountRequest
+import com.controlfinanciero.ui.theme.FinanceColors
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -73,7 +74,7 @@ fun AccountsScreen(
                             fmt.format(it.totalBalance),
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (it.totalBalance >= 0) MaterialTheme.colorScheme.onSurface else Color(0xFFC62828)
+                            color = if (it.totalBalance >= 0) MaterialTheme.colorScheme.onSurface else FinanceColors.Expense
                         )
                     }
                 }
@@ -144,7 +145,7 @@ private fun AccountCard(
             Text(
                 fmt.format(acc.balance),
                 fontWeight = FontWeight.Bold,
-                color = if (acc.balance >= 0) MaterialTheme.colorScheme.onSurface else Color(0xFFC62828)
+                color = if (acc.balance >= 0) MaterialTheme.colorScheme.onSurface else FinanceColors.Expense
             )
             IconButton(onClick = onEdit) {
                 Icon(Icons.Default.Edit, contentDescription = "Editar")
