@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
@@ -48,6 +49,7 @@ import com.controlfinanciero.ui.screens.AddTransactionScreen
 import com.controlfinanciero.ui.screens.AuthScreen
 import com.controlfinanciero.ui.screens.DashboardScreen
 import com.controlfinanciero.ui.screens.HouseholdScreen
+import com.controlfinanciero.ui.screens.InvestmentsScreen
 import com.controlfinanciero.ui.screens.PremiumScreen
 import com.controlfinanciero.ui.screens.RecurringScreen
 import com.controlfinanciero.ui.screens.SettingsScreen
@@ -55,6 +57,7 @@ import com.controlfinanciero.ui.theme.ControlFinancieroTheme
 import com.controlfinanciero.ui.viewmodels.AuthViewModel
 import com.controlfinanciero.ui.viewmodels.DashboardViewModel
 import com.controlfinanciero.ui.viewmodels.HouseholdViewModel
+import com.controlfinanciero.ui.viewmodels.InvestmentViewModel
 import com.controlfinanciero.ui.viewmodels.RecurringViewModel
 
 class MainActivity : ComponentActivity() {
@@ -186,6 +189,17 @@ private fun AppNavigation(
                     onBack = { viewModel.loadDashboard(); navController.popBackStack() }
                 )
             }
+            composable("investments") {
+                val investmentViewModel: InvestmentViewModel = viewModel()
+                val investmentSummary by investmentViewModel.summary.collectAsState()
+                InvestmentsScreen(
+                    summary = investmentSummary,
+                    onCreate = { investmentViewModel.create(it) },
+                    onUpdate = { id, req -> investmentViewModel.update(id, req) },
+                    onDelete = { investmentViewModel.delete(it) },
+                    onBack = { navController.popBackStack() }
+                )
+            }
             composable("settings") {
                 SettingsScreen(
                     user = user,
@@ -227,6 +241,7 @@ private fun AppDrawer(
         DrawerItem("Inicio", Icons.Default.Home, currentRoute == "dashboard") { onNavigate("dashboard") }
         DrawerItem("Ingresos/gastos fijos", Icons.Default.Repeat, currentRoute == "recurring") { onNavigate("recurring") }
         DrawerItem("Hogar compartido", Icons.Default.Group, currentRoute == "household") { onNavigate("household") }
+        DrawerItem("Inversiones", Icons.Default.TrendingUp, currentRoute == "investments") { onNavigate("investments") }
         DrawerItem("Configuración", Icons.Default.Settings, currentRoute == "settings") { onNavigate("settings") }
         DrawerItem("Mejorar plan", Icons.Default.WorkspacePremium, currentRoute == "premium") { onNavigate("premium") }
         Spacer(Modifier.weight(1f))

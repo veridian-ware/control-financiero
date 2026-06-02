@@ -5,6 +5,7 @@ import com.controlfinanciero.routes.authRoutes
 import com.controlfinanciero.routes.categoryRoutes
 import com.controlfinanciero.routes.dashboardRoutes
 import com.controlfinanciero.routes.householdRoutes
+import com.controlfinanciero.routes.investmentRoutes
 import com.controlfinanciero.routes.mercadoPagoRoutes
 import com.controlfinanciero.routes.recurringRoutes
 import com.controlfinanciero.routes.transactionRoutes
@@ -25,6 +26,7 @@ fun Application.configureRouting() {
             recurringRoutes()
             dashboardRoutes()
             householdRoutes()
+            investmentRoutes()
             mercadoPagoRoutes(environment.config)
         }
     }

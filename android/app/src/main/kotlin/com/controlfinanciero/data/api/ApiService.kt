@@ -91,4 +91,17 @@ interface ApiService {
 
     @POST("api/household/leave")
     suspend fun leaveHousehold(): ApiResponse<String>
+
+    // Inversiones
+    @GET("api/investments")
+    suspend fun getInvestments(): ApiResponse<InvestmentSummary>
+
+    @POST("api/investments")
+    suspend fun createInvestment(@Body request: CreateInvestmentRequest): ApiResponse<Investment>
+
+    @PUT("api/investments/{id}")
+    suspend fun updateInvestment(@Path("id") id: Int, @Body request: UpdateInvestmentRequest): ApiResponse<Investment>
+
+    @DELETE("api/investments/{id}")
+    suspend fun deleteInvestment(@Path("id") id: Int): ApiResponse<String>
 }

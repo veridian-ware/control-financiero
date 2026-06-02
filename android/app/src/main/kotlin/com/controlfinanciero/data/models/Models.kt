@@ -169,3 +169,41 @@ data class CreateHouseholdRequest(val name: String)
 
 @Serializable
 data class JoinHouseholdRequest(val inviteCode: String)
+
+// --- Inversiones ---
+
+@Serializable
+data class Investment(
+    val id: Int,
+    val name: String,
+    val type: String,
+    val amountInvested: Double,
+    val currentValue: Double,
+    val gain: Double,
+    val yieldPct: Double
+)
+
+@Serializable
+data class InvestmentSummary(
+    val totalInvested: Double,
+    val totalValue: Double,
+    val totalGain: Double,
+    val yieldPct: Double,
+    val investments: List<Investment>
+)
+
+@Serializable
+data class CreateInvestmentRequest(
+    val name: String,
+    val type: String,
+    val amountInvested: Double,
+    val currentValue: Double? = null
+)
+
+@Serializable
+data class UpdateInvestmentRequest(
+    val name: String? = null,
+    val type: String? = null,
+    val amountInvested: Double? = null,
+    val currentValue: Double? = null
+)
