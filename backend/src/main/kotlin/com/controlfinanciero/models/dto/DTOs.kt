@@ -21,7 +21,8 @@ data class TransactionDTO(
     val categoryName: String? = null,
     val date: String, // ISO 8601
     val source: String = "manual",
-    val externalId: String? = null
+    val externalId: String? = null,
+    val accountId: Int? = null
 )
 
 @Serializable
@@ -30,7 +31,8 @@ data class CreateTransactionRequest(
     val description: String,
     val type: String,
     val categoryId: Int,
-    val date: String? = null // null = ahora
+    val date: String? = null, // null = ahora
+    val accountId: Int? = null
 )
 
 @Serializable
@@ -147,6 +149,35 @@ data class UpdateInvestmentRequest(
     val type: String? = null,
     val amountInvested: Double? = null,
     val currentValue: Double? = null
+)
+
+@Serializable
+data class AccountDTO(
+    val id: Int,
+    val name: String,
+    val type: String,        // efectivo | banco | billetera | otro
+    val initialBalance: Double,
+    val balance: Double      // inicial + ingresos − egresos asociados
+)
+
+@Serializable
+data class AccountSummaryDTO(
+    val totalBalance: Double,
+    val accounts: List<AccountDTO>
+)
+
+@Serializable
+data class CreateAccountRequest(
+    val name: String,
+    val type: String,
+    val initialBalance: Double = 0.0
+)
+
+@Serializable
+data class UpdateAccountRequest(
+    val name: String? = null,
+    val type: String? = null,
+    val initialBalance: Double? = null
 )
 
 @Serializable

@@ -25,6 +25,19 @@ object Users : Table("users") {
     override val primaryKey = PrimaryKey(id)
 }
 
+// Cuenta/billetera del usuario (efectivo, banco, MP, Brubank…). El saldo se calcula como
+// saldo inicial + ingresos − egresos de las transacciones asociadas (account_id).
+object Accounts : Table("accounts") {
+    val id = integer("id").autoIncrement()
+    val userId = integer("user_id").references(Users.id)
+    val name = varchar("name", 100)
+    val type = varchar("type", 20) // efectivo | banco | billetera | otro
+    val initialBalance = decimal("initial_balance", 14, 2)
+    val createdAt = datetime("created_at")
+
+    override val primaryKey = PrimaryKey(id)
+}
+
 object Categories : Table("categories") {
     val id = integer("id").autoIncrement()
     val userId = integer("user_id").references(Users.id)
@@ -47,6 +60,7 @@ object Transactions : Table("transactions") {
     val date = datetime("date")
     val sourceCol = varchar("source", 50).default("manual") // propiedad renombrada: "source" choca con ColumnSet.source
     val externalId = varchar("external_id", 100).nullable() // ID de Mercado Pago / recurrente
+    val accountId = integer("account_id").references(Accounts.id).nullable() // cuenta/billetera (opcional)
     val createdAt = datetime("created_at")
 
     override val primaryKey = PrimaryKey(id)

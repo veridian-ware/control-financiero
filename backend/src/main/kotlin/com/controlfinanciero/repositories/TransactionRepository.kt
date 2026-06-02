@@ -21,7 +21,8 @@ class TransactionRepository {
         categoryName = this.getOrNull(Categories.name),
         date = this[Transactions.date].format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
         source = this[Transactions.sourceCol],
-        externalId = this[Transactions.externalId]
+        externalId = this[Transactions.externalId],
+        accountId = this[Transactions.accountId]
     )
 
     suspend fun getAll(
@@ -66,6 +67,7 @@ class TransactionRepository {
             it[categoryId] = request.categoryId
             it[date] = txDate
             it[sourceCol] = "manual"
+            it[accountId] = request.accountId
             it[createdAt] = now
         } get Transactions.id
 
@@ -76,7 +78,8 @@ class TransactionRepository {
             type = request.type,
             categoryId = request.categoryId,
             date = txDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
-            source = "manual"
+            source = "manual",
+            accountId = request.accountId
         )
     }
 

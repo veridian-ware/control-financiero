@@ -67,9 +67,9 @@ curl -X POST http://localhost:8080/api/categories/seed
   `Application.module()` inicializa DB y plugins en orden:
   `DatabaseFactory.init` → Serialization → CORS → **Security (JWT)** → StatusPages → Routing.
 - `database/DatabaseFactory.kt` — HikariCP + Exposed, lee config de `application.conf`.
-- `models/db/Tables.kt` — tablas Exposed (`Households`, `Users`, `Categories`, `Transactions`, `RecurringTransactions`, `RecurringOccurrences`, `Investments`). `Users` tiene `household_id` nullable; `Categories`/`Transactions`/`RecurringTransactions` tienen `user_id`. `RecurringOccurrences` son los vencimientos (pendiente/pagado) de cada fijo. `Investments` son inversiones (carga manual) por usuario.
+- `models/db/Tables.kt` — tablas Exposed (`Households`, `Users`, `Categories`, `Transactions`, `Accounts`, `RecurringTransactions`, `RecurringOccurrences`, `Investments`). `Users` tiene `household_id` nullable; `Categories`/`Transactions`/`RecurringTransactions` tienen `user_id`. `RecurringOccurrences` son los vencimientos (pendiente/pagado) de cada fijo. `Investments` son inversiones (carga manual) por usuario. `Accounts` son cuentas/billeteras; `Transactions` tiene `account_id` nullable (saldo de cuenta = inicial + ingresos − egresos).
 - `models/dto/DTOs.kt` + `AuthDTOs.kt` — DTOs serializables de la API.
-- `repositories/` — `UserRepository`, `CategoryRepository`, `TransactionRepository`, `RecurringTransactionRepository`, `HouseholdRepository`, `InvestmentRepository`. Las escrituras filtran por `userId`; las lecturas de transacciones usan el **alcance del hogar** (`HouseholdRepository.memberIds`). `RecurringTransactionRepository` genera los vencimientos del mes por frecuencia (idempotente); al marcar un vencimiento `pagado` crea la `Transaction` real, y al volverlo a `pendiente` la borra.
+- `repositories/` — `UserRepository`, `CategoryRepository`, `TransactionRepository`, `RecurringTransactionRepository`, `HouseholdRepository`, `InvestmentRepository`, `AccountRepository`. Las escrituras filtran por `userId`; las lecturas de transacciones usan el **alcance del hogar** (`HouseholdRepository.memberIds`). `RecurringTransactionRepository` genera los vencimientos del mes por frecuencia (idempotente); al marcar un vencimiento `pagado` crea la `Transaction` real, y al volverlo a `pendiente` la borra.
 - `routes/` — endpoints REST. Se registran en `plugins/Routing.kt`: `authRoutes` es público, el resto va bajo `authenticate(JWT_AUTH)`.
 - `services/MercadoPagoService.kt` — cliente Ktor hacia la API de Mercado Pago.
 - `plugins/Security.kt` — JWT HMAC256: `configureSecurity()`, `generateJwtToken()`, `ApplicationCall.userId()` (extrae el userId del token).
@@ -82,8 +82,8 @@ curl -X POST http://localhost:8080/api/categories/seed
 - `data/api/RetrofitClient.kt` — singleton Retrofit; interceptor agrega `Bearer` y, ante 401, fuerza logout.
 - `data/auth/` — `SessionManager` (DataStore) + `AuthTokenProvider` (token en memoria que lee el interceptor).
 - `data/models/Models.kt` — modelos compartidos + `ApiResponse<T>` wrapper.
-- `ui/screens/` — `DashboardScreen`, `AddTransactionScreen`, `AuthScreen`, `RecurringScreen` (fijos con frecuencia + vencimientos pendiente/pagado), `HouseholdScreen` (hogar compartido), `InvestmentsScreen` (inversiones), `SettingsScreen` (perfil), `PremiumScreen` (placeholder). Se navegan desde el **menú lateral** (`ModalNavigationDrawer`); el dashboard tiene la hamburguesa que lo abre. Avatar de iniciales en `ui/components/UserAvatar.kt`.
-- `ui/viewmodels/` — `DashboardViewModel`, `AuthViewModel` (login/registro/logout/perfil), `RecurringViewModel`, `HouseholdViewModel`, `InvestmentViewModel`.
+- `ui/screens/` — `DashboardScreen`, `AddTransactionScreen`, `AuthScreen`, `RecurringScreen` (fijos con frecuencia + vencimientos pendiente/pagado), `HouseholdScreen` (hogar compartido), `InvestmentsScreen` (inversiones), `AccountsScreen` (cuentas/billeteras), `SettingsScreen` (perfil), `PremiumScreen` (placeholder). Se navegan desde el **menú lateral** (`ModalNavigationDrawer`); el dashboard tiene la hamburguesa que lo abre. Avatar de iniciales en `ui/components/UserAvatar.kt`.
+- `ui/viewmodels/` — `DashboardViewModel`, `AuthViewModel` (login/registro/logout/perfil), `RecurringViewModel`, `HouseholdViewModel`, `InvestmentViewModel`, `AccountViewModel`.
 - `ui/theme/Theme.kt` — Material3.
 
 ## API REST
@@ -102,7 +102,7 @@ Todas las rutas excepto `register`/`login` requieren `Authorization: Bearer <tok
 | POST   | `/api/categories`                 | Crear categoría                               |
 | POST   | `/api/categories/seed`            | Crear categorías por defecto                  |
 | GET    | `/api/transactions`               | Listar (filtros `type,categoryId,from,to,limit,offset`) |
-| POST   | `/api/transactions`               | Crear transacción manual                      |
+| POST   | `/api/transactions`               | Crear transacción manual (`accountId` opcional) |
 | DELETE | `/api/transactions/{id}`          | Eliminar transacción                          |
 | GET    | `/api/dashboard`                  | Dashboard del mes actual (genera los vencimientos del mes) |
 | GET    | `/api/dashboard/monthly/{year}`   | Reporte mensual del año                       |
@@ -120,6 +120,10 @@ Todas las rutas excepto `register`/`login` requieren `Authorization: Bearer <tok
 | POST   | `/api/investments`                | Crear inversión (`name,type,amountInvested,currentValue?`) |
 | PUT    | `/api/investments/{id}`           | Editar inversión                              |
 | DELETE | `/api/investments/{id}`           | Eliminar inversión                            |
+| GET    | `/api/accounts`                   | Resumen de cuentas (patrimonio total + saldos) |
+| POST   | `/api/accounts`                   | Crear cuenta (`name,type,initialBalance`)     |
+| PUT    | `/api/accounts/{id}`              | Editar cuenta                                 |
+| DELETE | `/api/accounts/{id}`              | Eliminar cuenta (desvincula sus transacciones) |
 
 **Vista compartida:** si el usuario pertenece a un hogar, `transactions`, `dashboard` y
 `monthly` agregan los datos de **todos los miembros** (`HouseholdRepository.memberIds`). Las
