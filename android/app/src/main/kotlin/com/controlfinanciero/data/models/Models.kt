@@ -280,3 +280,45 @@ data class CreateBudgetRequest(
 data class UpdateBudgetRequest(
     val monthlyLimit: Double
 )
+
+// --- Metas de ahorro ---
+
+@Serializable
+data class SavingsGoal(
+    val id: Int,
+    val name: String,
+    val targetAmount: Double,
+    val currentAmount: Double,
+    val deadline: String? = null, // yyyy-MM-dd
+    val remaining: Double,
+    val progressPct: Double,
+    val reached: Boolean
+)
+
+@Serializable
+data class SavingsGoalSummary(
+    val totalSaved: Double,
+    val totalTarget: Double,
+    val goals: List<SavingsGoal>
+)
+
+@Serializable
+data class CreateSavingsGoalRequest(
+    val name: String,
+    val targetAmount: Double,
+    val deadline: String? = null,
+    val initialAmount: Double = 0.0
+)
+
+@Serializable
+data class UpdateSavingsGoalRequest(
+    val name: String? = null,
+    val targetAmount: Double? = null,
+    val deadline: String? = null,
+    val currentAmount: Double? = null
+)
+
+@Serializable
+data class ContributeRequest(
+    val amount: Double
+)

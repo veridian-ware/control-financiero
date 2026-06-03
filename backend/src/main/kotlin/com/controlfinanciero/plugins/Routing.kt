@@ -10,6 +10,7 @@ import com.controlfinanciero.routes.householdRoutes
 import com.controlfinanciero.routes.investmentRoutes
 import com.controlfinanciero.routes.mercadoPagoRoutes
 import com.controlfinanciero.routes.recurringRoutes
+import com.controlfinanciero.routes.savingsGoalRoutes
 import com.controlfinanciero.routes.transactionRoutes
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -31,6 +32,7 @@ fun Application.configureRouting() {
             householdRoutes()
             financialAccountRoutes()
             investmentRoutes()
+            savingsGoalRoutes()
             mercadoPagoRoutes(environment.config)
         }
     }

@@ -7,6 +7,7 @@ import com.controlfinanciero.models.db.Households
 import com.controlfinanciero.models.db.Investments
 import com.controlfinanciero.models.db.RecurringOccurrences
 import com.controlfinanciero.models.db.RecurringTransactions
+import com.controlfinanciero.models.db.SavingsGoals
 import com.controlfinanciero.models.db.Transactions
 import com.controlfinanciero.models.db.Users
 import com.zaxxer.hikari.HikariConfig
@@ -46,7 +47,7 @@ object DatabaseFactory {
             // (ej: users.household_id, recurring_transactions).
             SchemaUtils.createMissingTablesAndColumns(
                 Households, Users, Accounts, Categories, Transactions,
-                RecurringTransactions, RecurringOccurrences, Investments, Budgets
+                RecurringTransactions, RecurringOccurrences, Investments, Budgets, SavingsGoals
             )
         }
     }

@@ -218,6 +218,49 @@ data class UpdateBudgetRequest(
     val monthlyLimit: Double
 )
 
+// --- Metas de ahorro ---
+
+@Serializable
+data class SavingsGoalDTO(
+    val id: Int,
+    val name: String,
+    val targetAmount: Double,
+    val currentAmount: Double,
+    val deadline: String? = null, // yyyy-MM-dd
+    val remaining: Double,        // max(0, objetivo − ahorrado)
+    val progressPct: Double,      // ahorrado / objetivo * 100 (0..100)
+    val reached: Boolean          // ahorrado >= objetivo
+)
+
+@Serializable
+data class SavingsGoalSummaryDTO(
+    val totalSaved: Double,
+    val totalTarget: Double,
+    val goals: List<SavingsGoalDTO>
+)
+
+@Serializable
+data class CreateSavingsGoalRequest(
+    val name: String,
+    val targetAmount: Double,
+    val deadline: String? = null,   // yyyy-MM-dd
+    val initialAmount: Double = 0.0
+)
+
+@Serializable
+data class UpdateSavingsGoalRequest(
+    val name: String? = null,
+    val targetAmount: Double? = null,
+    val deadline: String? = null,
+    val currentAmount: Double? = null
+)
+
+/** Aporte (positivo) o retiro (negativo) sobre el ahorrado de una meta. */
+@Serializable
+data class ContributeRequest(
+    val amount: Double
+)
+
 @Serializable
 data class ApiResponse<T>(
     val success: Boolean,
