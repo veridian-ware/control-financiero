@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.WorkspacePremium
@@ -58,6 +59,7 @@ import com.controlfinanciero.ui.screens.InvestmentsScreen
 import com.controlfinanciero.ui.screens.PremiumScreen
 import com.controlfinanciero.ui.screens.RecurringScreen
 import com.controlfinanciero.ui.screens.ReportsScreen
+import com.controlfinanciero.ui.screens.SavingsGoalsScreen
 import com.controlfinanciero.ui.screens.SettingsScreen
 import com.controlfinanciero.ui.theme.ControlFinancieroTheme
 import com.controlfinanciero.ui.viewmodels.AccountViewModel
@@ -67,6 +69,7 @@ import com.controlfinanciero.ui.viewmodels.DashboardViewModel
 import com.controlfinanciero.ui.viewmodels.HouseholdViewModel
 import com.controlfinanciero.ui.viewmodels.InvestmentViewModel
 import com.controlfinanciero.ui.viewmodels.RecurringViewModel
+import com.controlfinanciero.ui.viewmodels.SavingsGoalViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -211,6 +214,18 @@ private fun AppNavigation(
                     onBack = { navController.popBackStack() }
                 )
             }
+            composable("savings") {
+                val savingsViewModel: SavingsGoalViewModel = viewModel()
+                val savingsSummary by savingsViewModel.summary.collectAsState()
+                SavingsGoalsScreen(
+                    summary = savingsSummary,
+                    onCreate = { savingsViewModel.create(it) },
+                    onUpdate = { id, req -> savingsViewModel.update(id, req) },
+                    onContribute = { id, amount -> savingsViewModel.contribute(id, amount) },
+                    onDelete = { savingsViewModel.delete(it) },
+                    onBack = { navController.popBackStack() }
+                )
+            }
             composable("accounts") {
                 val accountViewModel: AccountViewModel = viewModel()
                 val accountSummary by accountViewModel.summary.collectAsState()
@@ -285,6 +300,7 @@ private fun AppDrawer(
         DrawerItem("Ingresos/gastos fijos", Icons.Default.Repeat, currentRoute == "recurring") { onNavigate("recurring") }
         DrawerItem("Hogar compartido", Icons.Default.Group, currentRoute == "household") { onNavigate("household") }
         DrawerItem("Inversiones", Icons.Default.TrendingUp, currentRoute == "investments") { onNavigate("investments") }
+        DrawerItem("Metas de ahorro", Icons.Default.Savings, currentRoute == "savings") { onNavigate("savings") }
         DrawerItem("Cuentas", Icons.Default.AccountBalanceWallet, currentRoute == "accounts") { onNavigate("accounts") }
         DrawerItem("Presupuestos", Icons.Default.PieChart, currentRoute == "budgets") { onNavigate("budgets") }
         DrawerItem("Reportes", Icons.Default.BarChart, currentRoute == "reports") { onNavigate("reports") }

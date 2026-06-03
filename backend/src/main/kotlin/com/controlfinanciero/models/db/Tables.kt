@@ -129,3 +129,19 @@ object Budgets : Table("budgets") {
     override val primaryKey = PrimaryKey(id)
     init { uniqueIndex(userId, categoryId) }
 }
+
+// Meta de ahorro del usuario (carga manual, standalone como Investments): monto objetivo +
+// ahorrado acumulado + fecha límite opcional. El progreso se calcula al vuelo. El usuario
+// "aporta" (suma) o retira (resta) sobre current_amount; no toca transacciones ni cuentas.
+object SavingsGoals : Table("savings_goals") {
+    val id = integer("id").autoIncrement()
+    val userId = integer("user_id").references(Users.id)
+    val name = varchar("name", 200)
+    val targetAmount = decimal("target_amount", 14, 2)
+    val currentAmount = decimal("current_amount", 14, 2)
+    val deadline = date("deadline").nullable() // fecha límite opcional
+    val createdAt = datetime("created_at")
+    val updatedAt = datetime("updated_at")
+
+    override val primaryKey = PrimaryKey(id)
+}

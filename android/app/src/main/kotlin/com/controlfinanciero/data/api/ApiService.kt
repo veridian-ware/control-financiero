@@ -133,4 +133,20 @@ interface ApiService {
 
     @DELETE("api/budgets/{id}")
     suspend fun deleteBudget(@Path("id") id: Int): ApiResponse<String>
+
+    // Metas de ahorro
+    @GET("api/savings-goals")
+    suspend fun getSavingsGoals(): ApiResponse<SavingsGoalSummary>
+
+    @POST("api/savings-goals")
+    suspend fun createSavingsGoal(@Body request: CreateSavingsGoalRequest): ApiResponse<SavingsGoal>
+
+    @PUT("api/savings-goals/{id}")
+    suspend fun updateSavingsGoal(@Path("id") id: Int, @Body request: UpdateSavingsGoalRequest): ApiResponse<SavingsGoal>
+
+    @POST("api/savings-goals/{id}/contribute")
+    suspend fun contributeSavingsGoal(@Path("id") id: Int, @Body request: ContributeRequest): ApiResponse<SavingsGoal>
+
+    @DELETE("api/savings-goals/{id}")
+    suspend fun deleteSavingsGoal(@Path("id") id: Int): ApiResponse<String>
 }
