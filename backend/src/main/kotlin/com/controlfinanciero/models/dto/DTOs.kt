@@ -35,6 +35,21 @@ data class CreateTransactionRequest(
     val accountId: Int? = null
 )
 
+/** Importación del CSV de "dinero en cuenta" exportado de Mercado Pago. */
+@Serializable
+data class ImportCsvRequest(
+    val csv: String,
+    val accountId: Int? = null,
+    val onlyPurchases: Boolean = true
+)
+
+@Serializable
+data class ImportResult(
+    val imported: Int,
+    val skipped: Int,
+    val errors: Int
+)
+
 @Serializable
 data class DashboardDTO(
     val totalIngresos: Double,

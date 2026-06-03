@@ -75,6 +75,24 @@ class DashboardViewModel : ViewModel() {
         }
     }
 
+    fun importCsv(csv: String, onResult: (ImportResult?) -> Unit = {}) {
+        viewModelScope.launch {
+            try {
+                val response = api.importCsv(ImportCsvRequest(csv = csv))
+                if (response.success) {
+                    loadDashboard()
+                    onResult(response.data)
+                } else {
+                    _error.value = response.message
+                    onResult(null)
+                }
+            } catch (e: Exception) {
+                _error.value = "Error importando: ${e.message}"
+                onResult(null)
+            }
+        }
+    }
+
     fun syncMercadoPago(onResult: (SyncResult?) -> Unit = {}) {
         viewModelScope.launch {
             try {
