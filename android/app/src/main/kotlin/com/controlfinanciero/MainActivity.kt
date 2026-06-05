@@ -1,8 +1,13 @@
 package com.controlfinanciero
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,9 +43,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -70,6 +77,7 @@ import com.controlfinanciero.ui.viewmodels.DebtViewModel
 import com.controlfinanciero.ui.viewmodels.HouseholdViewModel
 import com.controlfinanciero.ui.viewmodels.InvestmentViewModel
 import com.controlfinanciero.ui.viewmodels.RecurringViewModel
+import com.controlfinanciero.work.DebtReminderScheduler
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -114,6 +122,23 @@ private fun AppNavigation(
 ) {
     val navController = rememberNavController()
     val viewModel: DashboardViewModel = viewModel()
+
+    val context = LocalContext.current
+    val notifPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* si deniega, simplemente no se muestran notificaciones */ }
+
+    // Al entrar autenticado: pedir permiso de notificaciones (Android 13+) y programar el
+    // recordatorio diario de vencimientos de cuotas/deudas.
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        DebtReminderScheduler.schedule(context)
+    }
 
     val dashboard by viewModel.dashboard.collectAsState()
     val categories by viewModel.categories.collectAsState()
