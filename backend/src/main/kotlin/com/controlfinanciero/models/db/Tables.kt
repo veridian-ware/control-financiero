@@ -129,3 +129,24 @@ object Budgets : Table("budgets") {
     override val primaryKey = PrimaryKey(id)
     init { uniqueIndex(userId, categoryId) }
 }
+
+// Cuota / deuda del usuario (carga manual, standalone — no toca transacciones ni cuentas).
+// Calca la planilla mensual: préstamos y compras en cuotas (contador X/N) y deudas a
+// personas ("DEBO"). El vencimiento se carga a mano; "pagar cuota" avanza el contador y
+// empuja la fecha +1 mes. Los derivados (restante, %, vencido/próximo) se calculan al vuelo.
+object Debts : Table("debts") {
+    val id = integer("id").autoIncrement()
+    val userId = integer("user_id").references(Users.id)
+    val description = varchar("description", 200)
+    val type = varchar("type", 20)                       // "prestamo" | "persona" | "compra"
+    val creditor = varchar("creditor", 200).nullable()   // a quién le debo (opcional)
+    val installmentAmount = decimal("installment_amount", 14, 2) // monto de cada cuota
+    val totalInstallments = integer("total_installments").nullable() // N (null = deuda simple)
+    val paidInstallments = integer("paid_installments").default(0)   // X ya pagadas
+    val dueDate = date("due_date").nullable()            // próximo vencimiento (manual)
+    val notes = varchar("notes", 500).nullable()
+    val createdAt = datetime("created_at")
+    val updatedAt = datetime("updated_at")
+
+    override val primaryKey = PrimaryKey(id)
+}

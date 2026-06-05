@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PieChart
@@ -53,6 +54,7 @@ import com.controlfinanciero.ui.screens.AddTransactionScreen
 import com.controlfinanciero.ui.screens.AuthScreen
 import com.controlfinanciero.ui.screens.BudgetsScreen
 import com.controlfinanciero.ui.screens.DashboardScreen
+import com.controlfinanciero.ui.screens.DebtsScreen
 import com.controlfinanciero.ui.screens.HouseholdScreen
 import com.controlfinanciero.ui.screens.InvestmentsScreen
 import com.controlfinanciero.ui.screens.PremiumScreen
@@ -64,6 +66,7 @@ import com.controlfinanciero.ui.viewmodels.AccountViewModel
 import com.controlfinanciero.ui.viewmodels.AuthViewModel
 import com.controlfinanciero.ui.viewmodels.BudgetViewModel
 import com.controlfinanciero.ui.viewmodels.DashboardViewModel
+import com.controlfinanciero.ui.viewmodels.DebtViewModel
 import com.controlfinanciero.ui.viewmodels.HouseholdViewModel
 import com.controlfinanciero.ui.viewmodels.InvestmentViewModel
 import com.controlfinanciero.ui.viewmodels.RecurringViewModel
@@ -235,6 +238,19 @@ private fun AppNavigation(
                     onBack = { navController.popBackStack() }
                 )
             }
+            composable("debts") {
+                val debtViewModel: DebtViewModel = viewModel()
+                val debtSummary by debtViewModel.summary.collectAsState()
+                DebtsScreen(
+                    summary = debtSummary,
+                    onCreate = { debtViewModel.create(it) },
+                    onUpdate = { id, req -> debtViewModel.update(id, req) },
+                    onPay = { debtViewModel.pay(it) },
+                    onUnpay = { debtViewModel.unpay(it) },
+                    onDelete = { debtViewModel.delete(it) },
+                    onBack = { navController.popBackStack() }
+                )
+            }
             composable("reports") {
                 ReportsScreen(
                     monthlyReport = monthlyReport,
@@ -283,6 +299,7 @@ private fun AppDrawer(
         Spacer(Modifier.height(8.dp))
         DrawerItem("Inicio", Icons.Default.Home, currentRoute == "dashboard") { onNavigate("dashboard") }
         DrawerItem("Ingresos/gastos fijos", Icons.Default.Repeat, currentRoute == "recurring") { onNavigate("recurring") }
+        DrawerItem("Cuotas y deudas", Icons.Default.CreditCard, currentRoute == "debts") { onNavigate("debts") }
         DrawerItem("Hogar compartido", Icons.Default.Group, currentRoute == "household") { onNavigate("household") }
         DrawerItem("Inversiones", Icons.Default.TrendingUp, currentRoute == "investments") { onNavigate("investments") }
         DrawerItem("Cuentas", Icons.Default.AccountBalanceWallet, currentRoute == "accounts") { onNavigate("accounts") }

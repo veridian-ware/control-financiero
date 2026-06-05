@@ -133,4 +133,23 @@ interface ApiService {
 
     @DELETE("api/budgets/{id}")
     suspend fun deleteBudget(@Path("id") id: Int): ApiResponse<String>
+
+    // Cuotas y deudas
+    @GET("api/debts")
+    suspend fun getDebts(): ApiResponse<DebtSummary>
+
+    @POST("api/debts")
+    suspend fun createDebt(@Body request: CreateDebtRequest): ApiResponse<Debt>
+
+    @PUT("api/debts/{id}")
+    suspend fun updateDebt(@Path("id") id: Int, @Body request: UpdateDebtRequest): ApiResponse<Debt>
+
+    @POST("api/debts/{id}/pay")
+    suspend fun payDebt(@Path("id") id: Int): ApiResponse<Debt>
+
+    @POST("api/debts/{id}/unpay")
+    suspend fun unpayDebt(@Path("id") id: Int): ApiResponse<Debt>
+
+    @DELETE("api/debts/{id}")
+    suspend fun deleteDebt(@Path("id") id: Int): ApiResponse<String>
 }
