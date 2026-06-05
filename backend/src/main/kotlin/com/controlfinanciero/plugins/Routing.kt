@@ -5,6 +5,7 @@ import com.controlfinanciero.routes.authRoutes
 import com.controlfinanciero.routes.budgetRoutes
 import com.controlfinanciero.routes.categoryRoutes
 import com.controlfinanciero.routes.dashboardRoutes
+import com.controlfinanciero.routes.debtRoutes
 import com.controlfinanciero.routes.financialAccountRoutes
 import com.controlfinanciero.routes.householdRoutes
 import com.controlfinanciero.routes.investmentRoutes
@@ -25,6 +26,7 @@ fun Application.configureRouting() {
             accountRoutes()
             categoryRoutes()
             budgetRoutes()
+            debtRoutes()
             transactionRoutes()
             recurringRoutes()
             dashboardRoutes()

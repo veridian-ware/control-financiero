@@ -97,4 +97,7 @@ dependencies {
 
     // DataStore (persistencia del token de sesión)
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+
+    // WorkManager (recordatorios de vencimientos en background)
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
 }

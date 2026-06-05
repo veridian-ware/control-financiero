@@ -218,6 +218,60 @@ data class UpdateBudgetRequest(
     val monthlyLimit: Double
 )
 
+// --- Cuotas y deudas ---
+
+@Serializable
+data class DebtDTO(
+    val id: Int,
+    val description: String,
+    val type: String,                       // "prestamo" | "persona" | "compra"
+    val creditor: String? = null,
+    val installmentAmount: Double,
+    val totalInstallments: Int? = null,
+    val paidInstallments: Int,
+    val dueDate: String? = null,            // yyyy-MM-dd
+    val notes: String? = null,
+    // Derivados (al vuelo):
+    val remainingInstallments: Int? = null, // N − X (null si no hay N)
+    val remainingAmount: Double,            // cuotas restantes × monto (o monto si deuda simple no saldada)
+    val progressPct: Double,                // X/N × 100 (0 si no hay N)
+    val finished: Boolean,                  // saldada
+    val dueStatus: String                   // "sin_fecha" | "vencido" | "proximo" | "ok"
+)
+
+@Serializable
+data class DebtSummaryDTO(
+    val totalRemaining: Double,   // suma de lo que falta pagar (deudas no saldadas)
+    val totalMonthly: Double,     // suma de la cuota mensual (compromiso del mes)
+    val overdueCount: Int,        // cuántas vencidas
+    val dueSoonCount: Int,        // cuántas vencen en ≤ 7 días
+    val debts: List<DebtDTO>
+)
+
+@Serializable
+data class CreateDebtRequest(
+    val description: String,
+    val type: String,
+    val creditor: String? = null,
+    val installmentAmount: Double,
+    val totalInstallments: Int? = null,
+    val paidInstallments: Int = 0,
+    val dueDate: String? = null,
+    val notes: String? = null
+)
+
+@Serializable
+data class UpdateDebtRequest(
+    val description: String? = null,
+    val type: String? = null,
+    val creditor: String? = null,
+    val installmentAmount: Double? = null,
+    val totalInstallments: Int? = null,
+    val paidInstallments: Int? = null,
+    val dueDate: String? = null,
+    val notes: String? = null
+)
+
 @Serializable
 data class ApiResponse<T>(
     val success: Boolean,

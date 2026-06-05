@@ -1,8 +1,13 @@
 package com.controlfinanciero
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PieChart
@@ -37,9 +43,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -53,6 +61,7 @@ import com.controlfinanciero.ui.screens.AddTransactionScreen
 import com.controlfinanciero.ui.screens.AuthScreen
 import com.controlfinanciero.ui.screens.BudgetsScreen
 import com.controlfinanciero.ui.screens.DashboardScreen
+import com.controlfinanciero.ui.screens.DebtsScreen
 import com.controlfinanciero.ui.screens.HouseholdScreen
 import com.controlfinanciero.ui.screens.InvestmentsScreen
 import com.controlfinanciero.ui.screens.PremiumScreen
@@ -64,9 +73,11 @@ import com.controlfinanciero.ui.viewmodels.AccountViewModel
 import com.controlfinanciero.ui.viewmodels.AuthViewModel
 import com.controlfinanciero.ui.viewmodels.BudgetViewModel
 import com.controlfinanciero.ui.viewmodels.DashboardViewModel
+import com.controlfinanciero.ui.viewmodels.DebtViewModel
 import com.controlfinanciero.ui.viewmodels.HouseholdViewModel
 import com.controlfinanciero.ui.viewmodels.InvestmentViewModel
 import com.controlfinanciero.ui.viewmodels.RecurringViewModel
+import com.controlfinanciero.work.DebtReminderScheduler
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -111,6 +122,23 @@ private fun AppNavigation(
 ) {
     val navController = rememberNavController()
     val viewModel: DashboardViewModel = viewModel()
+
+    val context = LocalContext.current
+    val notifPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* si deniega, simplemente no se muestran notificaciones */ }
+
+    // Al entrar autenticado: pedir permiso de notificaciones (Android 13+) y programar el
+    // recordatorio diario de vencimientos de cuotas/deudas.
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        DebtReminderScheduler.schedule(context)
+    }
 
     val dashboard by viewModel.dashboard.collectAsState()
     val categories by viewModel.categories.collectAsState()
@@ -235,6 +263,19 @@ private fun AppNavigation(
                     onBack = { navController.popBackStack() }
                 )
             }
+            composable("debts") {
+                val debtViewModel: DebtViewModel = viewModel()
+                val debtSummary by debtViewModel.summary.collectAsState()
+                DebtsScreen(
+                    summary = debtSummary,
+                    onCreate = { debtViewModel.create(it) },
+                    onUpdate = { id, req -> debtViewModel.update(id, req) },
+                    onPay = { debtViewModel.pay(it) },
+                    onUnpay = { debtViewModel.unpay(it) },
+                    onDelete = { debtViewModel.delete(it) },
+                    onBack = { navController.popBackStack() }
+                )
+            }
             composable("reports") {
                 ReportsScreen(
                     monthlyReport = monthlyReport,
@@ -283,6 +324,7 @@ private fun AppDrawer(
         Spacer(Modifier.height(8.dp))
         DrawerItem("Inicio", Icons.Default.Home, currentRoute == "dashboard") { onNavigate("dashboard") }
         DrawerItem("Ingresos/gastos fijos", Icons.Default.Repeat, currentRoute == "recurring") { onNavigate("recurring") }
+        DrawerItem("Cuotas y deudas", Icons.Default.CreditCard, currentRoute == "debts") { onNavigate("debts") }
         DrawerItem("Hogar compartido", Icons.Default.Group, currentRoute == "household") { onNavigate("household") }
         DrawerItem("Inversiones", Icons.Default.TrendingUp, currentRoute == "investments") { onNavigate("investments") }
         DrawerItem("Cuentas", Icons.Default.AccountBalanceWallet, currentRoute == "accounts") { onNavigate("accounts") }
