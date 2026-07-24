@@ -22,6 +22,7 @@ import com.controlfinanciero.data.models.CreateInvestmentRequest
 import com.controlfinanciero.data.models.Investment
 import com.controlfinanciero.data.models.InvestmentSummary
 import com.controlfinanciero.data.models.UpdateInvestmentRequest
+import com.controlfinanciero.ui.theme.FinanceColors
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -32,8 +33,8 @@ private val investmentTypes = listOf(
 
 private fun typeLabel(t: String) = investmentTypes.firstOrNull { it.first == t }?.second ?: t
 
-private val gainGreen = Color(0xFF2E7D32)
-private val lossRed = Color(0xFFC62828)
+private val gainGreen = FinanceColors.Income
+private val lossRed = FinanceColors.Expense
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -22,14 +22,15 @@ import com.controlfinanciero.data.models.Budget
 import com.controlfinanciero.data.models.Category
 import com.controlfinanciero.data.models.CreateBudgetRequest
 import com.controlfinanciero.data.models.UpdateBudgetRequest
+import com.controlfinanciero.ui.theme.FinanceColors
 import java.text.NumberFormat
 import java.util.Locale
 import kotlin.math.roundToInt
 
 private fun budgetColor(b: Budget): Color = when {
-    b.exceeded -> Color(0xFFC62828)
-    b.percentUsed >= 80 -> Color(0xFFEF6C00)
-    else -> Color(0xFF2E7D32)
+    b.exceeded -> FinanceColors.Expense
+    b.percentUsed >= 80 -> FinanceColors.Warning
+    else -> FinanceColors.Income
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

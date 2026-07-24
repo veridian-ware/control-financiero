@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.controlfinanciero.data.models.Dashboard
 import com.controlfinanciero.data.models.Transaction
+import com.controlfinanciero.ui.theme.FinanceColors
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -93,7 +94,7 @@ fun DashboardScreen(
                         name = cat.categoryName,
                         amount = currencyFormat.format(cat.total),
                         percentage = if (data.totalEgresos > 0) (cat.total / data.totalEgresos).toFloat() else 0f,
-                        color = Color(0xFFFF5722)
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
 
@@ -120,31 +121,30 @@ fun BalanceCards(dashboard: Dashboard, format: NumberFormat) {
             modifier = Modifier.weight(1f),
             title = "Ingresos",
             amount = format.format(dashboard.totalIngresos),
-            color = Color(0xFF4CAF50)
+            color = FinanceColors.Income
         )
         FinanceCard(
             modifier = Modifier.weight(1f),
             title = "Egresos",
             amount = format.format(dashboard.totalEgresos),
-            color = Color(0xFFF44336)
+            color = FinanceColors.Expense
         )
     }
 
     Spacer(Modifier.height(8.dp))
 
+    val balanceColor = if (dashboard.balance >= 0) FinanceColors.Income else FinanceColors.Expense
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (dashboard.balance >= 0) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
-        )
+        colors = CardDefaults.cardColors(containerColor = balanceColor.copy(alpha = 0.15f))
     ) {
         Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Balance", fontSize = 14.sp)
+            Text("Balance", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(
                 format.format(dashboard.balance),
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (dashboard.balance >= 0) Color(0xFF2E7D32) else Color(0xFFC62828)
+                color = balanceColor
             )
         }
     }
@@ -154,7 +154,7 @@ fun BalanceCards(dashboard: Dashboard, format: NumberFormat) {
 fun FinanceCard(modifier: Modifier, title: String, amount: String, color: Color) {
     Card(modifier = modifier) {
         Column(Modifier.padding(16.dp)) {
-            Text(title, fontSize = 12.sp, color = Color.Gray)
+            Text(title, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(amount, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = color)
         }
     }
@@ -170,7 +170,7 @@ fun CategoryBar(name: String, amount: String, percentage: Float, color: Color) {
         Spacer(Modifier.height(4.dp))
         Box(
             Modifier.fillMaxWidth().height(8.dp)
-                .background(Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(4.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(4.dp))
         ) {
             Box(
                 Modifier.fillMaxWidth(percentage).height(8.dp)
@@ -192,16 +192,16 @@ fun TransactionItem(tx: Transaction, format: NumberFormat) {
                 Text(tx.description, fontWeight = FontWeight.Medium)
                 Text(
                     "${tx.categoryName ?: "Sin categoría"} · ${tx.date.take(10)}",
-                    fontSize = 12.sp, color = Color.Gray
+                    fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 if (tx.source != "manual") {
-                    Text(tx.source, fontSize = 10.sp, color = Color(0xFF1976D2))
+                    Text(tx.source, fontSize = 10.sp, color = MaterialTheme.colorScheme.secondary)
                 }
             }
             Text(
                 "${if (tx.type == "ingreso") "+" else "-"}${format.format(tx.amount)}",
                 fontWeight = FontWeight.Bold,
-                color = if (tx.type == "ingreso") Color(0xFF4CAF50) else Color(0xFFF44336)
+                color = if (tx.type == "ingreso") FinanceColors.Income else FinanceColors.Expense
             )
         }
     }
